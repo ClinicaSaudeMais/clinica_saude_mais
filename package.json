@@ -1,0 +1,14 @@
+{
+  "name": "clinica-saude-mais",
+  "private": true,
+  "workspaces": [
+    "backend/server",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm:dev --prefix frontend\" \"npm:start --prefix backend/server\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
