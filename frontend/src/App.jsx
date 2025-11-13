@@ -7,9 +7,9 @@ function App() {
 
   useEffect(() => {
     // Faz a requisição para o backend
-    axios.get('http://localhost:5000/')
+    axios.get('http://localhost:5000/api/mensagem')
       .then(response => {
-        setMessage(response.data);
+        setMessage(response.data.message);
       })
       .catch(error => {
         console.error('Houve um erro ao buscar dados do backend!', error);
