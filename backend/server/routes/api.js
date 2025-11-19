@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db'); // Importa o pool de conexões
 
-// Exemplo de rota que faz uma consulta no banco de dados
 router.get('/mensagem', async (req, res) => {
   try {
     // Exemplo de consulta: seleciona o resultado de 1+1

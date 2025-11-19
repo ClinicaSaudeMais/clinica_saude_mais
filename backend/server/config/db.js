@@ -1,26 +1,66 @@
-const mysql = require('mysql2/promise');
-require('dotenv').config();
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
+const fs = require('fs');
 
-// Cria um "pool" de conexões com o banco de dados.
-// Um pool é mais eficiente do que criar uma nova conexão para cada consulta.
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+const dbPath = path.resolve(__dirname, '../db/database.db');
+const schemaPath = path.resolve(__dirname, '../db/schema.sql');
+
+// Checa se o arquivo do banco de dados existe.
+const dbExists = fs.existsSync(dbPath);
+
+// Conecta ao banco de dados SQLite. O arquivo é criado se não existir.
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('Erro ao conectar com o banco de dados SQLite:', err.message);
+  } else {
+    console.log('Conexão com o banco de dados SQLite estabelecida com sucesso!');
+    
+    // Se o banco de dados não existia, cria o schema.
+    if (!dbExists) {
+      console.log('Criando o schema do banco de dados...');
+      const schema = fs.readFileSync(schemaPath, 'utf8');
+      
+      db.exec(schema, (execErr) => {
+        if (execErr) {
+          console.error('Erro ao criar o schema do banco de dados:', execErr.message);
+        } else {
+          console.log('Schema do banco de dados criado com sucesso!');
+        }
+      });
+    }
+  }
 });
 
-// Testa a conexão
-pool.getConnection()
-  .then(connection => {
-    console.log('Conexão com o banco de dados MySQL estabelecida com sucesso!');
-    connection.release(); // Libera a conexão de volta para o pool
-  })
-  .catch(err => {
-    console.error('Erro ao conectar com o banco de dados:', err.stack);
-  });
+// A biblioteca sqlite3 não possui um "pool" como o mysql2.
+// A própria biblioteca gerencia a serialização de comandos.
+// Para consultas, você usará os métodos db.get(), db.all(), db.run(), etc.
+// Para compatibilidade com o código existente que pode esperar um pool,
+// vamos exportar o objeto 'db' e adaptar as rotas para usá-lo.
 
-module.exports = pool;
+// Adicionando um método 'query' para simular a interface do pool do mysql2
+// Isso ajuda a reduzir a quantidade de alterações necessárias no código das rotas.
+db.query = (sql, params) => {
+    return new Promise((resolve, reject) => {
+        if (sql.toUpperCase().startsWith('SELECT')) {
+            db.all(sql, params, (err, rows) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    // O mysql2 retorna um array [rows, fields]
+                    resolve([rows, []]);
+                }
+            });
+        } else {
+            db.run(sql, params, function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    // O mysql2 retorna um objeto com informações sobre a operação
+                    resolve([{ affectedRows: this.changes, insertId: this.lastID }]);
+                }
+            });
+        }
+    });
+};
+
+module.exports = db;

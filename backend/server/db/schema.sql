@@ -1,15 +1,12 @@
-CREATE DATABASE clinica_db;
-USE clinica_db;
-
 -- Tabela PERFIL
-CREATE TABLE perfil (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS perfil (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     nome VARCHAR(100) NOT NULL
 );
 
 -- Tabela USUARIO
-CREATE TABLE usuario (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS usuario (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     cpf VARCHAR(11) UNIQUE NOT NULL,
     data_nascimento DATE,
     nome VARCHAR(45) NOT NULL,
@@ -20,8 +17,8 @@ CREATE TABLE usuario (
 );
 
 -- Tabela ENDERECO
-CREATE TABLE endereco (
-    idendereco INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS endereco (
+    idendereco INTEGER PRIMARY KEY AUTOINCREMENT,
     usuario_id INT,
     logradouro VARCHAR(100),
     complemento VARCHAR(45),
@@ -33,8 +30,8 @@ CREATE TABLE endereco (
 );
 
 -- Tabela CONTATO
-CREATE TABLE contato (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS contato (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     usuario_id INT,
     tipo_contato VARCHAR(100),
     valor VARCHAR(100),
@@ -43,7 +40,7 @@ CREATE TABLE contato (
 );
 
 -- Tabela PERFIL_USUARIO (tabela associativa)
-CREATE TABLE perfil_usuario (
+CREATE TABLE IF NOT EXISTS perfil_usuario (
     perfil_id INT,
     usuario_id INT,
     PRIMARY KEY (perfil_id, usuario_id),
@@ -52,30 +49,30 @@ CREATE TABLE perfil_usuario (
 );
 
 -- Tabela PACIENTE
-CREATE TABLE paciente (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS paciente (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     usuario_id INT,
     convenio VARCHAR(45),
     FOREIGN KEY (usuario_id) REFERENCES usuario(id)
 );
 
 -- Tabela MEDICO
-CREATE TABLE medico (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS medico (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     usuario_id INT,
     crm VARCHAR(20),
     FOREIGN KEY (usuario_id) REFERENCES usuario(id)
 );
 
 -- Tabela ESPECIALIDADE
-CREATE TABLE especialidade (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS especialidade (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     nome VARCHAR(100),
     descricao VARCHAR(100)
 );
 
 -- Tabela ESPECIALIDADE_MEDICO (associação N:N)
-CREATE TABLE especialidade_medico (
+CREATE TABLE IF NOT EXISTS especialidade_medico (
     especialidade_id INT,
     medico_id INT,
     PRIMARY KEY (especialidade_id, medico_id),
@@ -84,8 +81,8 @@ CREATE TABLE especialidade_medico (
 );
 
 -- Tabela AGENDA
-CREATE TABLE agenda (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS agenda (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     medico_id INT,
     data DATE,
     hora TIME,
@@ -94,8 +91,8 @@ CREATE TABLE agenda (
 );
 
 -- Tabela CONSULTA
-CREATE TABLE consulta (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS consulta (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     paciente_id INT,
     agenda_id INT,
     status VARCHAR(45),
@@ -106,8 +103,8 @@ CREATE TABLE consulta (
 );
 
 -- Tabela AVALIACAO
-CREATE TABLE avaliacao (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS avaliacao (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     consulta_id INT,
     nota INT,
     comentario VARCHAR(100),
@@ -129,4 +126,3 @@ INSERT INTO especialidade (nome, descricao) VALUES
 ('Psiquiatria', 'Tratamento de transtornos mentais'),
 ('Oftalmologia', 'Cuidados com os olhos e visão'),
 ('Endocrinologia', 'Distúrbios hormonais e metabólicos');
-
