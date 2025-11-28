@@ -41,7 +41,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
 // Isso ajuda a reduzir a quantidade de alterações necessárias no código das rotas.
 db.query = (sql, params) => {
     return new Promise((resolve, reject) => {
-        if (sql.toUpperCase().startsWith('SELECT')) {
+        if (sql.trim().toUpperCase().startsWith('SELECT')) {
             db.all(sql, params, (err, rows) => {
                 if (err) {
                     reject(err);
@@ -55,11 +55,24 @@ db.query = (sql, params) => {
                 if (err) {
                     reject(err);
                 } else {
-                    // O mysql2 retorna um objeto com informações sobre a operação
+                    // Simplificado para retornar o objeto diretamente
                     resolve([{ affectedRows: this.changes, insertId: this.lastID }]);
                 }
             });
         }
+    });
+};
+
+// Adiciona um método 'exec' que retorna uma Promise para controle de transações
+db.execQuery = (sql) => {
+    return new Promise((resolve, reject) => {
+        db.exec(sql, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
     });
 };
 

@@ -1,19 +1,44 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/db'); // Importa o pool de conexões
 
-router.get('/mensagem', async (req, res) => {
-  try {
-    // Exemplo de consulta: seleciona o resultado de 1+1
-    const [rows, fields] = await pool.query('SELECT 1 + 1 AS solution');
-    res.json({ 
-      message: 'Consulta ao banco de dados bem-sucedida!',
-      data: rows[0] 
-    });
-  } catch (error) {
-    console.error('Erro ao executar a consulta:', error);
-    res.status(500).json({ message: 'Erro ao conectar com o banco de dados.' });
-  }
+/**
+ * @swagger
+ * tags:
+ *   name: Teste
+ *   description: Rotas de teste.
+ */
+
+/**
+ * @swagger
+ * /api/mensagem:
+ *   get:
+ *     summary: Retorna uma mensagem de teste.
+ *     tags: [Teste]
+ *     responses:
+ *       200:
+ *         description: Mensagem de teste retornada com sucesso.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Conexão com o backend bem-sucedida!"
+ */
+router.get('/mensagem', (req, res) => {
+    res.json({ message: 'Conexão com o backend bem-sucedida!' });
 });
+
+// Importa as rotas de usuários
+const usuariosRoutes = require('./usuarios');
+
+/**
+ * @swagger
+ * tags:
+ *   name: Usuarios
+ *   description: API para gerenciamento de usuários.
+ */
+router.use('/usuarios', usuariosRoutes);
 
 module.exports = router;
