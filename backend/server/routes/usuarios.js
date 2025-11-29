@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const bcrypt = require('bcrypt');
+const { authMiddleware } = require('../middleware/auth');
 
 const saltRounds = 10;
 
@@ -193,7 +194,7 @@ router.post('/', async (req, res) => {
             await db.execQuery('ROLLBACK');
             return res.status(409).json({ message: 'CPF ou Email já cadastrado.' });
         }
-        
+
         const hashedPassword = await bcrypt.hash(senha, saltRounds);
         const userSql = `INSERT INTO usuario (cpf, data_nascimento, nome, sobrenome, email, senha) VALUES (?, ?, ?, ?, ?, ?)`;
         const userParams = [cpf, data_nascimento, nome, sobrenome, email, hashedPassword];
@@ -220,6 +221,334 @@ router.post('/', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/usuarios:
+ *   get:
+ *     summary: Lista todos os usuários cadastrados, incluindo dados específicos de cada perfil.
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de usuários retornada com sucesso.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/UsuarioOutput'
+ *             examples:
+ *               exemplo:
+ *                 summary: Retorno de múltiplos usuários
+ *                 value:
+ *                   - id: 1
+ *                     cpf: "11122233344"
+ *                     nome: "Dr. Carlos"
+ *                     sobrenome: "Andrade"
+ *                     email: "carlos.andrade@example.com"
+ *                     data_nascimento: "1985-05-10"
+ *                     perfil_id: 2
+ *                     ativo: true
+ *                     role_data:
+ *                       crm: "12345-SP"
+ *                   - id: 2
+ *                     cpf: "55566677788"
+ *                     nome: "Ana"
+ *                     sobrenome: "Beatriz"
+ *                     email: "ana.beatriz@example.com"
+ *                     data_nascimento: "1992-09-20"
+ *                     perfil_id: 3
+ *                     ativo: true
+ *                     role_data:
+ *                       convenio: "Plano Saúde Top"
+ *       401:
+ *         description: Não autorizado.
+ *       500:
+ *         description: Erro no servidor.
+ *
+ */
+router.get('/', authMiddleware, async (req, res) => {
+    try {
+        const sql = `
+            SELECT 
+                u.id,
+                u.cpf,
+                u.data_nascimento,
+                u.nome,
+                u.sobrenome,
+                u.email,
+                pu.perfil_id,
+                CASE 
+                    WHEN pu.perfil_id = 2 THEN m.crm
+                    WHEN pu.perfil_id = 3 THEN p.convenio
+                    ELSE NULL
+                END AS role_value
+            FROM usuario u
+            INNER JOIN perfil_usuario pu ON pu.usuario_id = u.id
+            LEFT JOIN medico m ON m.usuario_id = u.id
+            LEFT JOIN paciente p ON p.usuario_id = u.id
+            ORDER BY u.nome ASC
+        `;
+
+        const rows = await db.query(sql);
+
+        // Se o driver retorna [rows, fields], pegue só rows
+        const data = rows[0];
+
+        const usuarios = data.map(row => ({
+            id: row.id,
+            cpf: row.cpf,
+            nome: row.nome,
+            sobrenome: row.sobrenome,
+            email: row.email,
+            data_nascimento: row.data_nascimento,
+            perfil_id: row.perfil_id,
+            ativo: true,
+            role_data: row.perfil_id === 2
+                ? { crm: row.role_value }
+                : row.perfil_id === 3
+                    ? { convenio: row.role_value }
+                    : {}
+        }));
+
+        res.status(200).json(usuarios);
+
+    } catch (error) {
+        console.error("Erro ao listar usuários:", error);
+        res.status(500).json({ message: 'Erro ao buscar usuários.' });
+    }
+});
+
+
+/**
+ * @swagger
+ * /api/usuarios/{id}:
+ *   get:
+ *     summary: Busca um usuário específico pelo ID.
+ *     tags: [Usuarios]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID do usuário.
+ *     responses:
+ *       200:
+ *         description: Dados do usuário retornados com sucesso.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UsuarioOutput'
+ *       404:
+ *         description: Usuário não encontrado.
+ *       500:
+ *         description: Erro no servidor.
+ */
+router.get('/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const userSql = `
+            SELECT
+                u.id, u.cpf, u.data_nascimento, u.nome, u.sobrenome, u.email, u.ativo,
+                pu.perfil_id,
+                p_desc.nome as perfis
+            FROM usuario u
+            JOIN perfil_usuario pu ON u.id = pu.usuario_id
+            JOIN perfil p_desc ON pu.perfil_id = p_desc.id
+            WHERE u.id = ?
+        `;
+
+        const [userRows] = await db.query(userSql, [id]);
+
+        if (userRows.length === 0) {
+            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        }
+
+        const userData = userRows[0];
+        
+        let roleData = {};
+        if (userData.perfil_id === 2) { // Médico
+            const [medicoRows] = await db.query('SELECT crm FROM medico WHERE usuario_id = ?', [id]);
+            if (medicoRows.length > 0) {
+                roleData.crm = medicoRows[0].crm;
+            }
+        } else if (userData.perfil_id === 3) { // Paciente
+            const [pacienteRows] = await db.query('SELECT convenio FROM paciente WHERE usuario_id = ?', [id]);
+            if (pacienteRows.length > 0) {
+                roleData.convenio = pacienteRows[0].convenio;
+            }
+        }
+
+        const [contatosRows] = await db.query('SELECT tipo_contato, valor, principal FROM contato WHERE usuario_id = ?', [id]);
+        const [enderecosRows] = await db.query('SELECT logradouro, complemento, bairro, cidade, estado, cep FROM endereco WHERE usuario_id = ?', [id]);
+
+        const usuario = {
+            id: userData.id,
+            cpf: userData.cpf,
+            nome: userData.nome,
+            sobrenome: userData.sobrenome,
+            email: userData.email,
+            data_nascimento: userData.data_nascimento,
+            ativo: !!userData.ativo,
+            perfis: userData.perfis,
+            ...roleData,
+            contatos: contatosRows,
+            enderecos: enderecosRows
+        };
+
+        res.status(200).json(usuario);
+
+    } catch (error) {
+        console.error("Erro ao buscar usuário:", error);
+        res.status(500).json({ message: 'Erro ao buscar usuário.' });
+    }
+});
+
+/**
+ * @swagger
+ * /api/usuarios/{id}:
+ *   put:
+ *     summary: Atualiza os dados de um usuário.
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID do usuário a ser atualizado.
+ *     requestBody:
+ *       description: "Campos para atualizar. Admins podem atualizar todos os campos. Usuários comuns só podem atualizar 'convenio', 'contatos' e 'enderecos' de sua própria conta."
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nome:
+ *                 type: string
+ *                 description: "Nome do usuário (Somente Admin)."
+ *               sobrenome:
+ *                 type: string
+ *                 description: "Sobrenome do usuário (Somente Admin)."
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: "Email do usuário (Somente Admin)."
+ *               ativo:
+ *                 type: boolean
+ *                 description: "Status de ativação do usuário (Somente Admin)."
+ *               perfil_id:
+ *                 type: integer
+ *                 description: "ID do Perfil (Somente Admin)."
+ *               convenio:
+ *                 type: string
+ *                 description: "Convênio do paciente (Admin ou proprietário)."
+ *               contatos:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/Contato'
+ *                 description: "Lista de contatos (Admin ou proprietário)."
+ *               enderecos:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/Endereco'
+ *                 description: "Lista de endereços (Admin ou proprietário)."
+ *     responses:
+ *       200:
+ *         description: Usuário atualizado com sucesso.
+ *       403:
+ *         description: Acesso negado.
+ *       404:
+ *         description: Usuário não encontrado.
+ *       500:
+ *         description: Erro no servidor.
+ */
+router.put('/:id', authMiddleware, async (req, res) => {
+    const { id } = req.params;
+    const requester = req.user; // Vem do authMiddleware
+
+    const isOwner = requester.id == id;
+    const isAdmin = requester.perfil_id === 1;
+
+    if (!isOwner && !isAdmin) {
+        return res.status(403).json({ message: 'Acesso negado. Você não tem permissão para atualizar este usuário.' });
+    }
+
+    const { nome, sobrenome, email, ativo, perfil_id, convenio, contatos, enderecos } = req.body;
+
+    try {
+        await db.execQuery('BEGIN TRANSACTION');
+
+        // Garante que o usuário a ser atualizado existe
+        const [userExists] = await db.query('SELECT id, perfil_id FROM usuario JOIN perfil_usuario ON usuario.id = perfil_usuario.usuario_id WHERE id = ?', [id]);
+        if (userExists.length === 0) {
+            await db.execQuery('ROLLBACK');
+            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        }
+        const userToUpdate = userExists[0];
+
+        // --- Lógica para campos de Admin ---
+        if (isAdmin) {
+            const adminFields = { nome, sobrenome, email, ativo };
+            const fieldsToUpdate = {};
+            
+            Object.keys(adminFields).forEach(key => {
+                if (adminFields[key] !== undefined && adminFields[key] !== null) {
+                    fieldsToUpdate[key] = adminFields[key];
+                }
+            });
+
+            if (Object.keys(fieldsToUpdate).length > 0) {
+                const setClause = Object.keys(fieldsToUpdate).map(key => `${key} = ?`).join(', ');
+                const values = Object.values(fieldsToUpdate);
+                await db.query(`UPDATE usuario SET ${setClause} WHERE id = ?`, [...values, id]);
+            }
+            
+            if (perfil_id !== undefined) {
+                 await db.query(`UPDATE perfil_usuario SET perfil_id = ? WHERE usuario_id = ?`, [perfil_id, id]);
+            }
+        }
+
+        // --- Lógica para campos do proprietário ou Admin ---
+        if (convenio !== undefined && (isAdmin || isOwner)) {
+            if (userToUpdate.perfil_id === 3) { // Apenas para pacientes
+                await db.query('UPDATE paciente SET convenio = ? WHERE usuario_id = ?', [convenio, id]);
+            }
+        }
+
+        if (enderecos && Array.isArray(enderecos) && (isAdmin || isOwner)) {
+            await db.query('DELETE FROM endereco WHERE usuario_id = ?', [id]);
+            for (const end of enderecos) {
+                await db.query('INSERT INTO endereco (usuario_id, logradouro, complemento, bairro, cidade, estado, cep) VALUES (?, ?, ?, ?, ?, ?, ?)', 
+                    [id, end.logradouro, end.complemento, end.bairro, end.cidade, end.estado, end.cep]);
+            }
+        }
+
+        if (contatos && Array.isArray(contatos) && (isAdmin || isOwner)) {
+            await db.query('DELETE FROM contato WHERE usuario_id = ?', [id]);
+            for (const ctt of contatos) {
+                await db.query('INSERT INTO contato (usuario_id, tipo_contato, valor, principal) VALUES (?, ?, ?, ?)', 
+                    [id, ctt.tipo_contato, ctt.valor, ctt.principal || false]);
+            }
+        }
+        
+        await db.execQuery('COMMIT');
+        
+        const [updatedUserRows] = await db.query('SELECT id, nome, email FROM usuario WHERE id = ?', [id]);
+        res.status(200).json({ message: 'Usuário atualizado com sucesso.', usuario: updatedUserRows[0] });
+
+    } catch (error) {
+        await db.execQuery('ROLLBACK');
+        console.error("Erro ao atualizar usuário:", error);
+        res.status(500).json({ message: 'Erro ao atualizar usuário.' });
+    }
+});
 
 
 module.exports = router;
