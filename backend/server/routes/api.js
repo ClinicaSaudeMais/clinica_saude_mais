@@ -32,6 +32,7 @@ router.get('/mensagem', (req, res) => {
 
 // Importa as rotas de usuários
 const usuariosRoutes = require('./usuarios');
+const authRoutes = require('./auth');
 
 /**
  * @swagger
@@ -40,5 +41,15 @@ const usuariosRoutes = require('./usuarios');
  *   description: API para gerenciamento de usuários.
  */
 router.use('/usuarios', usuariosRoutes);
+
+
+/**
+ * @swagger
+ * tags:
+ *   name: Autenticacao
+ *   description: API para autenticação de usuários.
+ */
+router.use('/auth', authRoutes);
+
 
 module.exports = router;

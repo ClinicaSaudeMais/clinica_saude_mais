@@ -13,12 +13,21 @@ const swaggerDefinition = {
       description: 'Servidor de Desenvolvimento',
     },
   ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      }
+    }
+  }
 };
 
 const options = {
   swaggerDefinition,
   // Paths to files containing OpenAPI definitions
-  apis: ['./routes/api.js', './routes/usuarios.js'],
+  apis: ['./routes/api.js', './routes/usuarios.js', './routes/auth.js'],
 };
 
 const swaggerSpec = swaggerJSDoc(options);
