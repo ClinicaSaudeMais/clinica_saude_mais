@@ -1,0 +1,110 @@
+.header {
+    width: calc(100% - 250px); /* Full width minus sidebar width */
+    height: 60px;
+    background-color: #ffffff; /* White background */
+    color: #333; /* Dark text */
+    padding: 0 20px;
+    display: flex;
+    justify-content: flex-end; /* Align items to the right */
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 250px; /* Aligned with the sidebar */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Bottom shadow */
+    z-index: 1000;
+    padding: 0%;
+}
+
+.profile-section {
+    display: flex;
+    align-items: center;
+}
+
+.dropdown-container {
+    position: relative;
+    margin-right: 20px;
+}
+
+.dropdown-toggle {
+    background-color: #108052; /* Green background */
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+}
+
+.dropdown-toggle:hover {
+    background-color: #0a5c2d; /* Darker green on hover */
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    min-width: 150px;
+    z-index: 1001;
+    list-style: none;
+    padding: 10px 0;
+    margin: 5px 0 0 0;
+    color: #333;
+}
+
+.dropdown-menu.hidden {
+    display: none;
+}
+
+.dropdown-item {
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.dropdown-item:hover {
+    background-color: #f1f1f1;
+}
+
+.username-button {
+    background: none;
+    border: none;
+    color: #333;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit; /* Ensure it uses the Inter font */
+    border-left: 1px solid black;
+    height: 40px;
+    padding-left: 15px
+}
+
+.username {
+    margin-right: 20px;
+    /* font-weight: bold; */
+    color: #333; /* Dark text */
+}
+
+.button-icon {
+    margin-right: 8px;
+}
+
+.logout-button {
+    background-color: #f8f9fa; /* Light background */
+    color: #333; /* Dark text */
+    border: 1px solid #dee2e6; /* Light border */
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+}
+
+.logout-button:hover {
+    background-color: #e9ecef;
+}

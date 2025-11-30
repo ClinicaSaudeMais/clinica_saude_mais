@@ -160,6 +160,16 @@ const saltRounds = 10;
  *                 perfil_id: 3
  *                 role_data:
  *                   convenio: "Plano Saúde Top"
+ *             administrador:
+ *               summary: Criar um usuário Administrador
+ *               value:
+ *                 cpf: "99988877766"
+ *                 data_nascimento: "1980-01-01"
+ *                 nome: "Admin"
+ *                 sobrenome: "Sistema"
+ *                 email: "admin@example.com"
+ *                 senha: "admin_password"
+ *                 perfil_id: 1
  *     responses:
  *       201:
  *         description: Usuário criado com sucesso.

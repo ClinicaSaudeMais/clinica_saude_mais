@@ -33,11 +33,20 @@ const JWT_SECRET = process.env.JWT_SECRET || 'seu_segredo_super_secreto_para_des
  *               email:
  *                 type: string
  *                 format: email
- *                 example: "carlos.andrade@example.com"
  *               senha:
  *                 type: string
  *                 format: password
- *                 example: "senhaforte123"
+ *           examples:
+ *             usuarioComum:
+ *               summary: Login de um usuário comum
+ *               value:
+ *                 email: "carlos.andrade@example.com"
+ *                 senha: "senhaforte123"
+ *             admin:
+ *               summary: Login de um usuário Administrador
+ *               value:
+ *                 email: "admin@example.com"
+ *                 senha: "admin_password"
  *     responses:
  *       200:
  *         description: Login bem-sucedido. Retorna o token de autenticação.
@@ -76,6 +85,8 @@ router.post('/login', async (req, res) => {
             WHERE u.email = ?
         `;
         const [users] = await db.query(sql, [email]);
+
+        console.log("Resultado da consulta de login:", users);
 
         if (users.length === 0) {
             return res.status(404).json({ message: 'Usuário não encontrado.' });

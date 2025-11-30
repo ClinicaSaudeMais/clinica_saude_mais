@@ -1,0 +1,10 @@
+.app-container {
+  display: flex;
+}
+
+.main-content {
+  margin-left: 270px; /* Width of sidebar + some padding */
+  margin-top: 60px; /* Height of the header */
+  padding: 20px;
+  width: calc(100% - 270px);
+}
