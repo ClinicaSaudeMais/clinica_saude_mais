@@ -1,0 +1,86 @@
+.auth-container {
+    display: flex;
+    min-height: 100vh;
+    min-width: 100vw;
+    background-image: url('../assets/fundo.png');
+    background-size: cover;
+    background-position: center;
+  }
+  
+  .auth-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .auth-left .logo {
+    width: 250px;
+  }
+  
+  .auth-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 20px;
+  }
+  
+  .auth-form {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px 40px;
+    background-color: white;
+    border-radius: 10px;
+  }
+  
+  .auth-form h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #01714E;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #555;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .submit-btn {
+    width: 100%;
+    padding: 15px;
+    background-color: #01714E;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+  
+  .link {
+    text-align: center;
+    margin-top: 20px;
+  }
+  
+  .link a {
+    color: #01714E;
+    text-decoration: none;
+  }
+  
+  .link a:hover {
+    text-decoration: underline;
+  }
+  
