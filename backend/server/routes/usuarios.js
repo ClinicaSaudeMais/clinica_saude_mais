@@ -209,7 +209,7 @@ router.post('/', async (req, res) => {
         const userSql = `INSERT INTO usuario (cpf, data_nascimento, nome, sobrenome, email, senha) VALUES (?, ?, ?, ?, ?, ?)`;
         const userParams = [cpf, data_nascimento, nome, sobrenome, email, hashedPassword];
         const userResult = await db.query(userSql, userParams);
-        const userId = userResult.insertId;
+        const userId = userResult[0].insertId;
 
         const perfilSql = `INSERT INTO perfil_usuario (perfil_id, usuario_id) VALUES (?, ?)`;
         await db.query(perfilSql, [perfil_id, userId]);
@@ -220,6 +220,18 @@ router.post('/', async (req, res) => {
         } else if (perfil_id === 3) {
             const pacienteSql = `INSERT INTO paciente (usuario_id, convenio) VALUES (?, ?)`;
             await db.query(pacienteSql, [userId, role_data.convenio || null]);
+        }
+
+        // Inserir contatos
+        for (const ctt of contatos) {
+            await db.query('INSERT INTO contato (usuario_id, tipo_contato, valor, principal) VALUES (?, ?, ?, ?)', 
+                [userId, ctt.tipo_contato, ctt.valor, ctt.principal || false]);
+        }
+
+        // Inserir endereços
+        for (const end of enderecos) {
+            await db.query('INSERT INTO endereco (usuario_id, logradouro, complemento, bairro, cidade, estado, cep) VALUES (?, ?, ?, ?, ?, ?, ?)', 
+                [userId, end.logradouro, end.complemento, end.bairro, end.cidade, end.estado, end.cep]);
         }
 
         await db.execQuery('COMMIT');
@@ -557,6 +569,72 @@ router.put('/:id', authMiddleware, async (req, res) => {
         await db.execQuery('ROLLBACK');
         console.error("Erro ao atualizar usuário:", error);
         res.status(500).json({ message: 'Erro ao atualizar usuário.' });
+    }
+});
+
+/**
+ * @swagger
+ * /api/usuarios/{id}:
+ *   delete:
+ *     summary: Deleta um usuário.
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID do usuário a ser deletado.
+ *     responses:
+ *       200:
+ *         description: Usuário deletado com sucesso.
+ *       403:
+ *         description: Acesso negado.
+ *       404:
+ *         description: Usuário não encontrado.
+ *       500:
+ *         description: Erro no servidor.
+ */
+router.delete('/:id', authMiddleware, async (req, res) => {
+    const { id } = req.params;
+    const requester = req.user;
+
+    // const isOwner = requester.id == id;
+    // const isAdmin = requester.perfil_id === 1;
+
+    // if (!isOwner && !isAdmin) {
+    //     return res.status(403).json({ message: 'Acesso negado. Você não tem permissão para deletar este usuário.' });
+    // }
+
+    try {
+        await db.execQuery('BEGIN TRANSACTION');
+
+        const [userExists] = await db.query('SELECT id FROM usuario WHERE id = ?', [id]);
+        if (userExists.length === 0) {
+            await db.execQuery('ROLLBACK');
+            return res.status(404).json({ message: 'Usuário não encontrado.' });
+        }
+
+        // Deletar dependências
+        await db.query('DELETE FROM perfil_usuario WHERE usuario_id = ?', [id]);
+        await db.query('DELETE FROM contato WHERE usuario_id = ?', [id]);
+        await db.query('DELETE FROM endereco WHERE usuario_id = ?', [id]);
+        await db.query('DELETE FROM medico WHERE usuario_id = ?', [id]);
+        await db.query('DELETE FROM paciente WHERE usuario_id = ?', [id]);
+        
+        // Deletar o usuário principal
+        await db.query('DELETE FROM usuario WHERE id = ?', [id]);
+
+        await db.execQuery('COMMIT');
+
+        res.status(200).json({ message: 'Usuário deletado com sucesso.' });
+
+    } catch (error) {
+        await db.execQuery('ROLLBACK');
+        console.error("Erro ao deletar usuário:", error);
+        res.status(500).json({ message: 'Erro ao deletar usuário.' });
     }
 });
 

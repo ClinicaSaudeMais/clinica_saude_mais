@@ -45,6 +45,20 @@
   .form-group {
     margin-bottom: 15px;
   }
+
+  .password-wrapper {
+    position: relative;
+  }
+  
+  .password-toggle-icon {
+    position: absolute;
+    top: 70%;
+    right: 15px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    user-select: none;
+    max-width: auto;
+  }
   
   .form-group label {
     display: block;
@@ -55,6 +69,7 @@
   .form-group input {
     width: 100%;
     padding: 10px;
+    box-sizing: border-box;
     border: 1px solid #ccc;
     border-radius: 5px;
   }
@@ -68,6 +83,17 @@
     border-radius: 5px;
     font-size: 1.2rem;
     cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .submit-btn:hover {
+    background-color: #015F41;
+  }
+
+  .form-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
   }
   
   .link {
@@ -83,4 +109,3 @@
   .link a:hover {
     text-decoration: underline;
   }
-  

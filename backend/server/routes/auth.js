@@ -82,9 +82,9 @@ router.post('/login', async (req, res) => {
             SELECT u.id, u.nome, u.email, u.senha, pu.perfil_id
             FROM usuario u
             JOIN perfil_usuario pu ON u.id = pu.usuario_id
-            WHERE u.email = ?
+            WHERE TRIM(u.email) = ?
         `;
-        const [users] = await db.query(sql, [email]);
+        const [users] = await db.query(sql, [email.trim()]);
 
         console.log("Resultado da consulta de login:", users);
 
@@ -93,7 +93,7 @@ router.post('/login', async (req, res) => {
         }
 
         const user = users[0];
-
+        
         const isMatch = await bcrypt.compare(senha, user.senha);
 
         if (!isMatch) {

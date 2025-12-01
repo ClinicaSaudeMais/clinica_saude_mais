@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import '../Auth.css';
-import logoFundoBranco from '../../assets/logo_fundo_branco.png';
+import logoFundoBranco from '../../assets/logo.png';
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     senha: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -16,6 +18,10 @@ const Login = () => {
       ...formData,
       [name]: value
     });
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   const handleSubmit = async (e) => {
@@ -78,10 +84,10 @@ const Login = () => {
               required 
             />
           </div>
-          <div className="form-group">
+          <div className="form-group password-wrapper">
             <label htmlFor="senha">Senha</label>
             <input 
-              type="password" 
+              type={showPassword ? "text" : "password"} 
               id="senha" 
               name="senha" 
               placeholder="********" 
@@ -91,6 +97,9 @@ const Login = () => {
               maxLength="12" 
               required 
             />
+            <span onClick={togglePasswordVisibility} className="password-toggle-icon">
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
           </div>
           <button type="submit" className="submit-btn">Entrar</button>
           <div className="link">

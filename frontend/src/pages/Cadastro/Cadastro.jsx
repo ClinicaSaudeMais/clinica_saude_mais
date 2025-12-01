@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../Auth.css';
-import logoFundoBranco from '../../assets/logo_fundo_branco.png';
+import logoFundoBranco from '../../assets/logo.png';
 
 const Cadastro = () => {
   const [step, setStep] = useState(1);
