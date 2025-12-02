@@ -1,9 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Cadastro from './pages/Cadastro/Cadastro';
-import Login from './pages/Login/Login'; // Assuming you have a Login component
+import Login from './pages/Login/Login';
 import Menu from './components/Menu/Menu';
 import Header from './components/Header/Header';
+import PrivateRoute from './components/PrivateRoute/PrivateRoute';
+import Home from './pages/Home/Home';
 import './App.css';
 
 // A simple layout component for authenticated routes
@@ -16,9 +18,6 @@ const MainLayout = ({ children }) => (
     </main>
   </div>
 );
-
-// A simple placeholder for the main page
-const MainPage = () => <h1>Página Principal</h1>;
 
 function App() {
   return (
@@ -33,9 +32,11 @@ function App() {
         <Route 
           path="/home" 
           element={
-            <MainLayout>
-              <MainPage />
-            </MainLayout>
+            <PrivateRoute>
+              <MainLayout>
+                <Home />
+              </MainLayout>
+            </PrivateRoute>
           } 
         />
       </Routes>
