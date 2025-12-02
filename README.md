@@ -6,7 +6,8 @@ Este é um projeto full-stack para a M3 da matéria de Melhoria de Processos de 
 
 - **Frontend**: React, Vite
 - **Backend**: Node.js, Express.js
-- **Banco de Dados**: SQLite
+- **Banco de Dados**: PostgreSQL
+- **ORM**: Prisma
 - **Gerenciador de Pacotes**: npm Workspaces
 - **Utilitários**: `concurrently` para executar os projetos simultaneamente, `nodemon` para reiniciar o servidor backend automaticamente.
 
@@ -15,12 +16,13 @@ Este é um projeto full-stack para a M3 da matéria de Melhoria de Processos de 
 O projeto está dividido em dois workspaces principais gerenciados a partir da raiz:
 
 - `frontend/`: Contém a aplicação React.
-- `backend/server/`: Contém a aplicação Node.js/Express.
+- `backend/`: Contém a aplicação Node.js/Express.
 
 ## Pré-requisitos
 
 - [Node.js](https://nodejs.org/) (versão 16 ou superior)
 - npm (versão 7 ou superior, para suporte a Workspaces)
+- [PostgreSQL](https://www.postgresql.org/download/): Um servidor de banco de dados PostgreSQL em execução.
 
 ## Instalação e Configuração
 
@@ -30,15 +32,34 @@ O projeto está dividido em dois workspaces principais gerenciados a partir da r
     cd clinica_saude_mais
     ```
 
-2.  **Instale as dependências:**
-    Na **raiz do projeto**, execute o comando abaixo. Ele irá instalar as dependências tanto do frontend quanto do backend em uma única pasta `node_modules`.
+2.  **Instale as dependências do projeto:**
+    Na **raiz do projeto**, execute o comando abaixo. Ele irá instalar as dependências tanto do frontend quanto do backend.
     ```sh
     npm install
     ```
 
+3.  **Configure o Banco de Dados (Backend):**
+    a. Navegue até o diretório do backend:
+    ```sh
+    cd backend
+    ```
+    b. Crie um arquivo `.env` a partir do exemplo `.env.example` (se existir) ou crie um novo.
+    c. Adicione a sua connection string do PostgreSQL ao arquivo `.env`:
+    ```env
+    DATABASE_URL="postgresql://SEU_USUARIO:SUA_SENHA@localhost:5432/clinica_db"
+    ```
+    d. Execute as migrações do Prisma para criar as tabelas no banco de dados:
+    ```sh
+    npx prisma migrate dev
+    ```
+    e. Volte para o diretório raiz:
+    ```sh
+    cd ..
+    ```
+
 ## Como Executar o Projeto
 
-Com a instalação concluída, você pode iniciar ambos os servidores (frontend e backend) com um **único comando** a partir da **raiz do projeto**:
+Com a instalação e configuração concluídas, você pode iniciar ambos os servidores (frontend e backend) com um **único comando** a partir da **raiz do projeto**:
 
 ```sh
 npm run dev
@@ -53,65 +74,53 @@ Este comando fará o seguinte:
 A API do backend é documentada com Swagger para facilitar os testes e o desenvolvimento.
 
 Para acessar a documentação:
-1. Inicie o servidor backend (usando `npm run dev` na raiz ou `npm run dev` em `backend/server`).
+1. Inicie o servidor backend (usando `npm run dev` na raiz).
 2. Abra seu navegador e acesse [http://localhost:5000/api-docs](http://localhost:5000/api-docs).
 
 A interface do Swagger UI permitirá que você visualize todas as rotas da API, seus parâmetros e respostas, além de permitir o teste direto dos endpoints.
 
 ## Banco de Dados
 
-Este projeto utiliza **SQLite**. O arquivo do banco de dados (`database.db`) é criado automaticamente na pasta `backend/server/db/` na primeira vez que o servidor backend é iniciado.
+Este projeto utiliza **PostgreSQL** com o **Prisma ORM** para gerenciar o acesso ao banco de dados.
 
-O schema do banco de dados e os dados iniciais estão definidos no arquivo `backend/server/db/schema.sql`.
+-   **Schema**: A estrutura do banco de dados (tabelas, colunas, relações) é definida no arquivo `backend/prisma/schema.prisma`.
+-   **Migrações**: As alterações no schema são aplicadas ao banco de dados através do comando `npx prisma migrate dev`.
+-   **Conexão**: A aplicação se conecta ao banco de dados usando a variável de ambiente `DATABASE_URL` definida no arquivo `backend/.env`.
 
-## Inspecionando o Banco de Dados SQLite
+## Inspecionando o Banco de Dados PostgreSQL
 
-O projeto utiliza SQLite, que armazena todos os dados em um único arquivo (`database.db`). Existem duas formas principais de inspecionar o conteúdo do seu banco de dados: via linha de comando ou com uma ferramenta gráfica (GUI).
+Você pode inspecionar o banco de dados PostgreSQL usando uma ferramenta gráfica como o **DBeaver** ou o **pgAdmin**, ou através da linha de comando com `psql`.
 
-### Opção 1: Linha de Comando (CLI) com `sqlite3`
+### Opção 1: Ferramenta Gráfica (GUI) - DBeaver
 
-Se você preferir a linha de comando, pode usar o utilitário `sqlite3` (parte das ferramentas SQLite).
+1.  **Baixe e instale o DBeaver:**
+    *   Vá para a página oficial: [https://dbeaver.io/download/](https://dbeaver.io/download/)
+    *   Baixe e instale a edição "Community".
 
-1.  **Baixe as ferramentas SQLite CLI (se necessário):**
-    *   Vá para a página de download oficial do SQLite: [https://www.sqlite.org/download.html](https://www.sqlite.org/download.html)
-    *   Procure pela seção "Precompiled Binaries for Windows" e baixe o arquivo `sqlite-tools-win32-x86-...zip`.
-    *   Descompacte o arquivo em um local de fácil acesso (ex: `C:\sqlite`).
-
-2.  **Abra o terminal e navegue até o diretório do banco de dados:**
-    ```bash
-    cd C:\xampp\htdocs\clinica_saude_mais\backend\server\db
-    ```
-    (Ajuste o caminho se o seu projeto estiver em outro local.)
-
-3.  **Acesse o banco de dados:**
-    Assumindo que você descompactou o `sqlite3.exe` em `C:\sqlite`:
-    ```bash
-    C:\sqlite\sqlite3 database.db
-    ```
-    Você verá o prompt `sqlite>`.
-
-4.  **Comandos úteis:**
-    *   `.tables` - Lista todas as tabelas no banco de dados.
-    *   `.schema <nome_da_tabela>` - Mostra o esquema (estrutura) de uma tabela específica (ex: `.schema usuario`).
-    *   `SELECT * FROM <nome_da_tabela>;` - Exibe todos os registros de uma tabela (ex: `SELECT * FROM usuario;`). Não esqueça o `;` no final.
-    *   `.quit` - Sai do prompt `sqlite>`.
-
-### Opção 2: Ferramenta Gráfica (GUI) - DB Browser for SQLite
-
-Para uma visualização mais amigável, o **DB Browser for SQLite** é uma excelente opção.
-
-1.  **Baixe e instale o DB Browser for SQLite:**
-    *   Vá para a página oficial: [https://sqlitebrowser.org/dl/](https://sqlitebrowser.org/dl/)
-    *   Baixe o instalador adequado para o seu sistema operacional (Windows de 64 bits, geralmente).
-    *   Siga as instruções de instalação.
-
-2.  **Abra o `database.db`:**
-    *   Abra o DB Browser for SQLite.
-    *   Clique em "Abrir Banco de Dados" (ou "Open Database").
-    *   Navegue até `C:\xampp\htdocs\clinica_saude_mais\backend\server\db\` (ou onde seu projeto estiver) e selecione o arquivo `database.db`.
+2.  **Conecte-se ao seu banco de dados:**
+    *   Abra o DBeaver e clique em "Nova Conexão" (ícone de tomada).
+    *   Selecione "PostgreSQL" e clique em "Próximo".
+    *   Preencha as credenciais de conexão (Host, Porta, Nome do banco de dados, Usuário e Senha) que correspondem à sua `DATABASE_URL`.
+    *   Clique em "Testar Conexão" para verificar se tudo está correto e, em seguida, em "Finalizar".
 
 3.  **Explore o banco de dados:**
-    *   Na aba "Estrutura de Dados" (Database Structure), você verá a lista de tabelas e seus esquemas.
-    *   Na aba "Procurar Dados" (Browse Data), você pode selecionar uma tabela no dropdown e visualizar todos os seus registros de forma paginada.
+    *   No painel "Navegador de Banco de Dados", expanda a sua conexão e navegue por `Schemas -> public -> Tabelas`.
+    *   Clique duas vezes em uma tabela para ver sua estrutura e os dados contidos nela.
+
+### Opção 2: Linha de Comando (CLI) com `psql`
+
+Se você tem o `psql` instalado e no seu PATH, pode acessar o banco de dados diretamente.
+
+1.  **Abra o terminal e conecte-se:**
+    ```bash
+    psql -U SEU_USUARIO -d clinica_db -h localhost
+    ```
+    (Você será solicitado a fornecer a senha).
+
+2.  **Comandos úteis:**
+    *   `\dt` - Lista todas as tabelas no schema público.
+    *   `\d <nome_da_tabela>` - Mostra a estrutura de uma tabela específica (ex: `\d "User"`). Note que o Prisma pode criar tabelas com nomes em maiúsculas, exigindo aspas.
+    *   `SELECT * FROM "<nome_da_tabela>";` - Exibe todos os registros de uma tabela (ex: `SELECT * FROM "User";`).
+    *   `\q` - Sai do prompt `psql`.
 
 Essas ferramentas o ajudarão a verificar os dados, depurar e entender melhor como as informações estão sendo armazenadas.
