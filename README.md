@@ -39,23 +39,26 @@ O projeto está dividido em dois workspaces principais gerenciados a partir da r
     ```
 
 3.  **Configure o Banco de Dados (Backend):**
-    a. Navegue até o diretório do backend:
-    ```sh
-    cd backend
-    ```
-    b. Crie um arquivo `.env` a partir do exemplo `.env.example` (se existir) ou crie um novo.
-    c. Adicione a sua connection string do PostgreSQL ao arquivo `.env`:
-    ```env
-    DATABASE_URL="postgresql://SEU_USUARIO:SUA_SENHA@localhost:5432/clinica_db"
-    ```
-    d. Execute as migrações do Prisma para criar as tabelas no banco de dados:
-    ```sh
-    npx prisma migrate dev
-    ```
-    e. Volte para o diretório raiz:
-    ```sh
-    cd ..
-    ```
+    a.  **Garanta que o PostgreSQL está instalado e rodando** na sua máquina.
+    b.  **Crie um banco de dados** chamado `clinica_db` no seu servidor PostgreSQL.
+    c.  Navegue até o diretório do backend:
+        ```sh
+        cd backend
+        ```
+    d.  Crie um novo arquivo chamado `.env` (se não existir) ou copie o conteúdo de `.env.exemple` para um novo `.env`.
+    e.  Adicione a sua connection string do PostgreSQL ao arquivo `.env`, **substituindo SUA_SENHA** pela senha do seu usuário `postgres`:
+        ```env
+        DATABASE_URL="postgresql://postgres:SUA_SENHA@localhost:5432/clinica_db"
+        PORT=3000
+        ```
+    f.  Execute as migrações do Prisma para criar as tabelas no banco de dados. Você será perguntado se deseja criar o banco de dados caso ele não exista.
+        ```sh
+        npx prisma migrate dev
+        ```
+    g.  Volte para o diretório raiz:
+        ```sh
+        cd ..
+        ```
 
 ## Como Executar o Projeto
 
