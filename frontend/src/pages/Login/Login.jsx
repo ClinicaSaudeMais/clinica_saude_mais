@@ -9,8 +9,35 @@ const Login = () => {
     email: '',
     senha: ''
   });
+  const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
+  const validateField = (name, value) => {
+    let error = '';
+    switch (name) {
+      case 'email':
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!value) error = 'O e-mail é obrigatório.';
+        else if (!emailRegex.test(value)) error = 'Por favor, insira um e-mail válido.';
+        break;
+      case 'senha':
+        if (!value) error = 'A senha é obrigatória.';
+        else if (value.length < 8 || value.length > 20) {
+          error = 'A senha deve ter entre 8 e 20 caracteres.';
+        }
+        break;
+      default:
+        break;
+    }
+    return error;
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    const error = validateField(name, value);
+    setErrors({ ...errors, [name]: error });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,6 +45,12 @@ const Login = () => {
       ...formData,
       [name]: value
     });
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
+    }
+    if (errors.form) {
+        setErrors({ ...errors, form: '' });
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -26,17 +59,16 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const newErrors = {};
+    const emailError = validateField('email', formData.email);
+    if (emailError) newErrors.email = emailError;
 
-    // Client-side validation for email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      alert("Por favor, insira um e-mail válido.");
-      return;
-    }
+    const senhaError = validateField('senha', formData.senha);
+    if (senhaError) newErrors.senha = senhaError;
 
-    // Client-side validation for password length
-    if (formData.senha.length < 8 || formData.senha.length > 12) {
-      alert("A senha deve ter entre 8 e 12 caracteres.");
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
       return;
     }
 
@@ -56,11 +88,11 @@ const Login = () => {
         navigate('/home'); // Redirect to the home page
       } else {
         const error = await response.json();
-        alert(`Erro ao fazer login: ${error.message}`);
+        setErrors({ form: error.message || 'E-mail ou senha inválidos.' });
       }
     } catch (error) {
       console.error('Erro ao fazer login:', error);
-      alert("Erro ao conectar com o servidor.");
+      setErrors({ form: 'Erro ao conectar com o servidor.' });
     }
   };
 
@@ -72,6 +104,7 @@ const Login = () => {
       <div className="auth-right">
         <form className="auth-form" onSubmit={handleSubmit}>
           <h2>Login</h2>
+          {errors.form && <p className="error-message" style={{ textAlign: 'center', marginBottom: '10px' }}>{errors.form}</p>}
           <div className="form-group">
             <label htmlFor="email">E-mail</label>
             <input 
@@ -80,9 +113,12 @@ const Login = () => {
               name="email" 
               placeholder="email@gmail.com" 
               value={formData.email} 
-              onChange={handleChange} 
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className={errors.email ? 'error' : ''}
               required 
             />
+            {errors.email && <p className="error-message">{errors.email}</p>}
           </div>
           <div className="form-group password-wrapper">
             <label htmlFor="senha">Senha</label>
@@ -93,13 +129,16 @@ const Login = () => {
               placeholder="********" 
               value={formData.senha} 
               onChange={handleChange} 
+              onBlur={handleBlur}
               minLength="8" 
-              maxLength="12" 
+              maxLength="20"
+              className={errors.senha ? 'error' : ''}
               required 
             />
             <span onClick={togglePasswordVisibility} className="password-toggle-icon">
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
+            {errors.senha && <p className="error-message">{errors.senha}</p>}
           </div>
           <button type="submit" className="submit-btn">Entrar</button>
           <div className="link">

@@ -109,3 +109,14 @@
   .link a:hover {
     text-decoration: underline;
   }
+  
+.form-group input.error {
+  border-color: red;
+}
+
+.error-message {
+  color: red;
+  font-weight: bold;
+  font-size: 0.8rem;
+  margin-top: 5px;
+}
