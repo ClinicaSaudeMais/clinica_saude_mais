@@ -72,8 +72,9 @@ const Login = () => {
       return;
     }
 
+    let response; // Define response outside the try block to have access in the catch block
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
+      response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -84,15 +85,20 @@ const Login = () => {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('token', data.token); // Store the JWT token
-        alert("Login bem-sucedido!");
         navigate('/home'); // Redirect to the home page
       } else {
         const error = await response.json();
         setErrors({ form: error.message || 'E-mail ou senha inválidos.' });
       }
     } catch (error) {
-      console.error('Erro ao fazer login:', error);
-      setErrors({ form: 'Erro ao conectar com o servidor.' });
+      console.error('Erro detalhado ao fazer login:', {
+        errorMessage: error.message,
+        errorStack: error.stack,
+        responseStatus: response?.status,
+        responseStatusText: response?.statusText,
+        responseBody: response // Log the whole response object
+      });
+      setErrors({ form: `Erro ao processar a resposta do servidor (Status: ${response?.status}). Verifique o console para mais detalhes.` });
     }
   };
 
