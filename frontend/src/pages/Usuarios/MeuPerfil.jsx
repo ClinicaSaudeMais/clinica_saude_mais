@@ -23,7 +23,7 @@ const MeuPerfil = () => {
         const decodedToken = jwtDecode(token);
         const userId = decodedToken.id;
 
-        const response = await fetch(`http://localhost:3000/api/usuarios/${userId}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/usuarios/${userId}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

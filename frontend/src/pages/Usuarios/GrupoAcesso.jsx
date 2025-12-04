@@ -9,7 +9,7 @@ const GrupoAcesso = () => {
   useEffect(() => {
     async function fetchPerfis() {
       try {
-        const response = await fetch("http://localhost:3000/api/perfis");
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/perfis`);
         if (!response.ok) {
           throw new Error('Falha ao buscar os grupos de acesso.');
         }

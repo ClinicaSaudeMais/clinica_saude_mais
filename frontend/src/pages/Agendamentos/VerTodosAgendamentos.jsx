@@ -10,7 +10,7 @@ const VerTodosAgendamentos = () => {
   useEffect(() => {
     async function fetchConsultas() {
       try {
-        const response = await fetch("http://localhost:3000/api/consultas");
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/consultas`);
         if (!response.ok) {
           throw new Error('Falha ao buscar agendamentos.');
         }

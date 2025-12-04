@@ -17,7 +17,7 @@ const MeusAgendamentos = () => {
       }
 
       try {
-        const response = await fetch("http://localhost:3000/api/consultas/meus-agendamentos", {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/consultas/meus-agendamentos`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

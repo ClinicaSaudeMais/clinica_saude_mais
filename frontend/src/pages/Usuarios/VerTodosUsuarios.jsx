@@ -8,7 +8,7 @@ const VerTodosUsuarios = () => {
   useEffect(() => {
     async function fetchUsers() {
       try {
-        const response = await fetch("http://localhost:3000/api/usuarios");
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/usuarios`);
         const data = await response.json();
         setUsers(data);
       } catch (error) {
@@ -20,7 +20,7 @@ const VerTodosUsuarios = () => {
 
   const handleActivate = async (id) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/usuarios/${id}/ativar`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/usuarios/${id}/ativar`, {
         method: 'PUT',
       });
       if (!response.ok) {
@@ -39,7 +39,7 @@ const VerTodosUsuarios = () => {
 
   const handleDeactivate = async (id) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/usuarios/${id}/desativar`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/usuarios/${id}/desativar`, {
         method: 'PUT',
       });
       if (!response.ok) {
