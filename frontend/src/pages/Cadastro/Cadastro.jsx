@@ -162,7 +162,7 @@ const Cadastro = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:5000/api/usuarios', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/usuarios`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

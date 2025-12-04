@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { FaUsers, FaCalendarAlt, FaChartBar, FaChevronRight } from 'react-icons/fa';
 import './Menu.css';
 import logo from '../../assets/logo_branca.png';
@@ -25,10 +26,10 @@ const Menu = () => {
                             <FaChevronRight className={`arrow-icon ${openMenu === 'usuarios' ? 'open' : ''}`} />
                         </button>
                         <ul className={`submenu ${openMenu === 'usuarios' ? 'open' : ''}`}>
-                            <li className="submenu-item"><a href="#">Ver todos</a></li>
-                            <li className="submenu-item"><a href="#">Grupo de acesso</a></li>
-                            <li className="submenu-item"><a href="#">Meu perfil</a></li>
-                            <li className="submenu-item"><a href="#">Novo usuário</a></li>
+                            <li className="submenu-item"><Link to="/usuarios">Ver todos</Link></li>
+                            <li className="submenu-item"><Link to="/usuarios/grupos-de-acesso">Grupo de acesso</Link></li>
+                            <li className="submenu-item"><Link to="/usuarios/meu-perfil">Meu perfil</Link></li>
+                            <li className="submenu-item"><Link to="/usuarios/novo">Novo usuário</Link></li>
                         </ul>
                     </li>
 
@@ -40,9 +41,9 @@ const Menu = () => {
                             <FaChevronRight className={`arrow-icon ${openMenu === 'agendamentos' ? 'open' : ''}`} />
                         </button>
                         <ul className={`submenu ${openMenu === 'agendamentos' ? 'open' : ''}`}>
-                            <li className="submenu-item"><a href="#">Ver todos</a></li>
-                            <li className="submenu-item"><a href="#">Meus agendamentos</a></li>
-                            <li className="submenu-item"><a href="#">Novo agendamento</a></li>
+                            <li className="submenu-item"><Link to="/agendamentos">Ver todos</Link></li>
+                            <li className="submenu-item"><Link to="/agendamentos/meus">Meus agendamentos</Link></li>
+                            <li className="submenu-item"><Link to="/agendamentos/novo">Novo agendamento</Link></li>
                         </ul>
                     </li>
 
@@ -54,9 +55,9 @@ const Menu = () => {
                             <FaChevronRight className={`arrow-icon ${openMenu === 'cronograma' ? 'open' : ''}`} />
                         </button>
                         <ul className={`submenu ${openMenu === 'cronograma' ? 'open' : ''}`}>
-                            <li className="submenu-item"><a href="#">Ver todos</a></li>
-                            <li className="submenu-item"><a href="#">Meu cronograma</a></li>
-                            <li className="submenu-item"><a href="#">Novo cronograma</a></li>
+                            <li className="submenu-item"><Link to="/cronogramas">Ver todos</Link></li>
+                            <li className="submenu-item"><Link to="/cronogramas/meus">Meu cronograma</Link></li>
+                            <li className="submenu-item"><Link to="/cronogramas/novo">Novo cronograma</Link></li>
                         </ul>
                     </li>
                 </ul>
