@@ -1,8 +1,9 @@
 import { Router } from "express";
+import { listarAvaliacoes, criarAvaliacao } from "../../controllers/avaliacao.controller.js";
+
 const router = Router();
 
-router.get("/", (req, res) => {
-  res.send("Rota de avaliações funcionando");
-});
+router.get("/", listarAvaliacoes);
+router.post("/", criarAvaliacao);
 
 export default router;

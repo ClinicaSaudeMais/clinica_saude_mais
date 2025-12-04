@@ -1,8 +1,9 @@
 import { Router } from "express";
+import { listarAgendaPorMedico, criarAgenda } from "../../controllers/agenda.controller.js";
+
 const router = Router();
 
-router.get("/", (req, res) => {
-  res.send("Rota de agenda funcionando");
-});
+router.get("/:medicoId", listarAgendaPorMedico);
+router.post("/", criarAgenda);
 
 export default router;
