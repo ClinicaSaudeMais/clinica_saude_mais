@@ -182,3 +182,24 @@ ALTER TABLE "consulta" ADD CONSTRAINT "consulta_agenda_id_fkey" FOREIGN KEY ("ag
 
 -- AddForeignKey
 ALTER TABLE "avaliacao" ADD CONSTRAINT "avaliacao_consulta_id_fkey" FOREIGN KEY ("consulta_id") REFERENCES "consulta"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- Insert perfis
+INSERT INTO "perfil" ("nome") VALUES
+('administrador'),
+('medico'),
+('paciente');
+
+-- Insert especialidades
+INSERT INTO "especialidade" ("nome", "descricao") VALUES
+('Cardiologia', 'Especialidade médica que se ocupa do diagnóstico e tratamento das doenças que afetam o coração, bem como os outros componentes do sistema circulatório.'),
+('Dermatologia', 'Especialidade médica que se ocupa do diagnóstico e tratamento clínico-cirúrgico das doenças que acometem o maior órgão do corpo humano – a pele.'),
+('Ginecologia', 'Especialidade que trata da saúde da mulher, da infância à terceira idade.'),
+('Ortopedia', 'Especialidade médica que cuida das doenças e deformidades dos ossos, músculos, ligamentos, articulações, enfim, elementos relacionados ao aparelho locomotor.');
+
+-- Insert usuario admin
+-- A password é "Admin!123"
+INSERT INTO "usuario" ("cpf", "data_nascimento", "nome", "sobrenome", "email", "senha") VALUES
+('00000000000', '1990-01-01', 'Admin', 'User', 'admin@saudemais.com', '$2b$10$kTldwtDbrtxydnSqP6.ktuQ8yQ8hq7lXuu76Dh5RUw.kxrLWXnZhi');
+
+INSERT INTO "perfil_usuario" ("perfil_id", "usuario_id") VALUES
+((SELECT "id" FROM "perfil" WHERE "nome" = 'administrador'), (SELECT "id" FROM "usuario" WHERE "email" = 'admin@saudemais.com'));
