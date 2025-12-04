@@ -21,6 +21,7 @@ const Cadastro = () => {
     },
     endereco: {
       logradouro: '',
+      numero: '', // Adicionado campo número
       complemento: '',
       bairro: '',
       cidade: '',
@@ -35,19 +36,14 @@ const Cadastro = () => {
       case 'email':
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!value) error = 'O e-mail é obrigatório.';
-        else if (!emailRegex.test(value)) error = 'Por favor, insira um e-mail válido.';
+        else if (!emailRegex.test(value)) error = 'E-mail inválido.';
         break;
       case 'senha':
         if (!value) error = 'A senha é obrigatória.';
-        else if (value.length < 8 || value.length > 20) {
-          error = 'A senha deve ter entre 8 e 20 caracteres.';
-        }
+        else if (value.length < 8) error = 'Mínimo 8 caracteres.';
         break;
       case 'confirmar_senha':
-        if (!value) error = 'A confirmação da senha é obrigatória.';
-        else if (value !== formData.senha) {
-          error = 'As senhas não coincidem.';
-        }
+        if (value !== formData.senha) error = 'Senhas não coincidem.';
         break;
       case 'cpf':
         if (!value) error = 'O CPF é obrigatório.';
@@ -58,6 +54,9 @@ const Cadastro = () => {
       case 'data_nascimento':
         if (!value) error = 'A data de nascimento é obrigatória.';
         break;
+      case 'numero': // Validação para o campo número do endereço
+        if (formData.endereco.logradouro && !value) error = 'O número é obrigatório se o logradouro for preenchido.';
+        break;
       default:
         break;
     }
@@ -67,7 +66,7 @@ const Cadastro = () => {
   const handleBlur = (e) => {
     const { name, value } = e.target;
     const error = validateField(name, value);
-    setErrors({ ...errors, [name]: error });
+    setErrors(prev => ({ ...prev, [name]: error }));
   };
 
   const handleCpfChange = (e) => {
@@ -75,9 +74,9 @@ const Cadastro = () => {
     value = value.replace(/(\d{3})(\d)/, '$1.$2');
     value = value.replace(/(\d{3})(\d)/, '$1.$2');
     value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    setFormData({ ...formData, cpf: value });
+    setFormData(prev => ({ ...prev, cpf: value }));
     if (errors.cpf) {
-      setErrors({ ...errors, cpf: '' });
+      setErrors(prev => ({ ...prev, cpf: '' }));
     }
   };
 
@@ -85,32 +84,32 @@ const Cadastro = () => {
     let value = e.target.value.replace(/\D/g, '');
     value = value.replace(/^(\d{2})(\d)/, '($1) $2');
     value = value.replace(/(\d{5})(\d)/, '$1-$2');
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       contato: {
-        ...formData.contato,
+        ...prev.contato,
         valor: value,
       },
-    });
+    }));
   };
 
   const handleCepChange = (e) => {
     let value = e.target.value.replace(/\D/g, '');
     value = value.replace(/^(\d{5})(\d)/, '$1-$2');
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       endereco: {
-        ...formData.endereco,
+        ...prev.endereco,
         cep: value,
       },
-    });
+    }));
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors({ ...errors, [name]: '' });
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
     if (name === 'senha') {
         const confirmError = validateField('confirmar_senha', formData.confirmar_senha);
@@ -120,22 +119,32 @@ const Cadastro = () => {
 
   const handleNestedChange = (e, parent) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [parent]: {
-        ...formData[parent],
+        ...prev[parent],
         [name]: value,
       },
-    });
+    }));
+    // Re-validate 'numero' if logradouro is changed
+    if (parent === 'endereco' && (name === 'logradouro' || name === 'numero')) {
+        const error = validateField('numero', name === 'numero' ? value : formData.endereco.numero);
+        setErrors(prev => ({...prev, numero: error}));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const fieldsToValidate = ['cpf', 'nome', 'data_nascimento', 'email', 'senha', 'confirmar_senha'];
+    // Add 'numero' to fieldsToValidate if logradouro is filled
+    if (formData.endereco.logradouro) {
+        fieldsToValidate.push('numero');
+    }
+
     const newErrors = {};
     fieldsToValidate.forEach(field => {
-      const error = validateField(field, formData[field]);
+      const error = validateField(field === 'numero' ? field : formData[field], field === 'numero' ? formData.endereco.numero : formData[field]);
       if (error) {
         newErrors[field] = error;
       }
@@ -158,7 +167,9 @@ const Cadastro = () => {
         convenio: formData.convenio,
       },
       contatos: formData.contato.valor ? [formData.contato] : [],
-      enderecos: formData.endereco.cep ? [formData.endereco] : [],
+      enderecos: formData.endereco.cep
+        ? [{ ...formData.endereco, numero: String(formData.endereco.numero) }]
+        : [],
     };
 
     try {
@@ -175,11 +186,11 @@ const Cadastro = () => {
         window.location.href = '/login';
       } else {
         const errorData = await response.json();
-        alert(`Erro ao cadastrar: ${errorData.message || 'Erro desconhecido.'}`);
+        setErrors({ form: errorData.message || 'Erro desconhecido ao cadastrar.' });
       }
     } catch (error) {
       console.error('Erro ao cadastrar:', error);
-      alert('Erro ao conectar com o servidor.');
+      setErrors({ form: 'Erro ao conectar com o servidor.' });
     }
   };
 
@@ -191,6 +202,9 @@ const Cadastro = () => {
       <div className="auth-right">
         <form className="auth-form" onSubmit={handleSubmit}>
           <h2>Cadastro</h2>
+          {errors.form && (
+            <p className="error-message" style={{ textAlign: 'center', marginBottom: '10px' }}>{errors.form}</p>
+          )}
 
           {/* Personal and Auth Fields */}
           <div className="form-group">
@@ -245,6 +259,11 @@ const Cadastro = () => {
           <div className="form-group">
             <label htmlFor="logradouro">Logradouro</label>
             <input type="text" id="logradouro" name="logradouro" placeholder="Rua, Avenida, etc." value={formData.endereco.logradouro} onChange={(e) => handleNestedChange(e, 'endereco')} />
+          </div>
+          <div className="form-group">
+            <label htmlFor="numero">Número</label>
+            <input type="text" id="numero" name="numero" placeholder="Número" value={formData.endereco.numero} onChange={(e) => handleNestedChange(e, 'endereco')} className={errors.numero ? 'error' : ''} />
+            {errors.numero && <p className="error-message">{errors.numero}</p>}
           </div>
           <div className="form-group">
             <label htmlFor="complemento">Complemento</label>
