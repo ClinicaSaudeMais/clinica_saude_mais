@@ -1,0 +1,56 @@
+paths:
+  /api/medicos:
+    get:
+      summary: Lista todos os médicos
+      description: Retorna uma lista com todos os médicos cadastrados no sistema, incluindo informações do usuário e especialidades.
+      tags:
+        - Médicos
+      responses:
+        200:
+          description: Lista de médicos retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Medico'
+        500:
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/medicos/{id}:
+    get:
+      summary: Busca médico por ID
+      description: Retorna os dados de um médico específico, incluindo informações do usuário, especialidades e agenda.
+      tags:
+        - Médicos
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID único do médico
+          example: 1
+      responses:
+        200:
+          description: Médico encontrado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Medico'
+        404:
+          description: Médico não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

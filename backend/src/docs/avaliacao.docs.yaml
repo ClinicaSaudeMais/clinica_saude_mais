@@ -1,0 +1,61 @@
+paths:
+  /api/avaliacoes:
+    get:
+      summary: Lista todas as avaliações
+      description: Retorna uma lista com todas as avaliações de consultas, incluindo informações da consulta, paciente e médico.
+      tags:
+        - Avaliações
+      responses:
+        200:
+          description: Lista de avaliações retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Avaliacao'
+        500:
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Cria uma nova avaliação
+      description: Permite que um paciente avalie uma consulta realizada. Cada consulta pode ter apenas uma avaliação.
+      tags:
+        - Avaliações
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvaliacaoInput'
+      responses:
+        201:
+          description: Avaliação criada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Avaliacao'
+        400:
+          description: Erro de validação - campos obrigatórios não informados ou consulta já avaliada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                camposObrigatorios:
+                  summary: Campos obrigatórios não informados
+                  value:
+                    message: "consulta_id e nota são obrigatórios."
+                consultaAvaliada:
+                  summary: Consulta já avaliada
+                  value:
+                    message: "Consulta já avaliada."
+        500:
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

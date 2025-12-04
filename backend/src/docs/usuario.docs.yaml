@@ -1,0 +1,52 @@
+paths:
+  /api/usuarios:
+    post:
+      summary: Cria um novo usuário
+      description: Cadastra um novo usuário no sistema. Pode incluir dados de contato, endereço e dados específicos do perfil (paciente ou médico).
+      tags:
+        - Usuários
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioInput'
+      responses:
+        201:
+          description: Usuário criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        400:
+          description: Usuário com este e-mail ou CPF já existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      summary: Lista todos os usuários
+      description: Retorna uma lista com todos os usuários cadastrados no sistema, incluindo seus perfis.
+      tags:
+        - Usuários
+      responses:
+        200:
+          description: Lista de usuários retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Usuario'
+        500:
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
