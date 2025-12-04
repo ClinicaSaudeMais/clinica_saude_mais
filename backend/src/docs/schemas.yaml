@@ -1,0 +1,407 @@
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT para autenticação
+
+  schemas:
+    # Schemas de Usuário
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID único do usuário
+        cpf:
+          type: string
+          description: CPF do usuário
+        data_nascimento:
+          type: string
+          format: date-time
+          description: Data de nascimento
+        nome:
+          type: string
+          description: Nome do usuário
+        sobrenome:
+          type: string
+          description: Sobrenome do usuário
+        email:
+          type: string
+          format: email
+          description: E-mail do usuário
+        ativo:
+          type: boolean
+          description: Status do usuário (ativo/inativo)
+
+    UsuarioInput:
+      type: object
+      required:
+        - cpf
+        - data_nascimento
+        - nome
+        - sobrenome
+        - email
+        - senha
+        - perfil_id
+      properties:
+        cpf:
+          type: string
+          description: CPF do usuário
+          example: "12345678901"
+        data_nascimento:
+          type: string
+          format: date
+          description: Data de nascimento
+          example: "1990-01-15"
+        nome:
+          type: string
+          description: Nome do usuário
+          example: "João"
+        sobrenome:
+          type: string
+          description: Sobrenome do usuário
+          example: "Silva"
+        email:
+          type: string
+          format: email
+          description: E-mail do usuário
+          example: "joao.silva@email.com"
+        senha:
+          type: string
+          description: Senha do usuário
+          example: "senhaSegura123"
+        perfil_id:
+          type: integer
+          description: ID do perfil (1=Admin, 2=Médico, 3=Paciente)
+          example: 3
+        contatos:
+          type: array
+          description: Lista de contatos do usuário
+          items:
+            $ref: '#/components/schemas/ContatoInput'
+        enderecos:
+          type: array
+          description: Lista de endereços do usuário
+          items:
+            $ref: '#/components/schemas/EnderecoInput'
+        role_data:
+          type: object
+          description: Dados específicos do perfil
+          properties:
+            convenio:
+              type: string
+              description: Convênio do paciente
+            crm:
+              type: string
+              description: CRM do médico
+
+    ContatoInput:
+      type: object
+      properties:
+        tipo_contato:
+          type: string
+          description: Tipo do contato (telefone, celular, etc.)
+          example: "celular"
+        valor:
+          type: string
+          description: Valor do contato
+          example: "11999999999"
+        principal:
+          type: boolean
+          description: Indica se é o contato principal
+          example: true
+
+    EnderecoInput:
+      type: object
+      properties:
+        logradouro:
+          type: string
+          description: Nome da rua/avenida
+          example: "Rua das Flores"
+        numero:
+          type: string
+          description: Número do endereço
+          example: "123"
+        complemento:
+          type: string
+          description: Complemento do endereço
+          example: "Apto 45"
+        bairro:
+          type: string
+          description: Bairro
+          example: "Centro"
+        cidade:
+          type: string
+          description: Cidade
+          example: "São Paulo"
+        estado:
+          type: string
+          description: Estado (UF)
+          example: "SP"
+        cep:
+          type: string
+          description: CEP
+          example: "01234-567"
+
+    # Schemas de Autenticação
+    LoginInput:
+      type: object
+      required:
+        - email
+        - senha
+      properties:
+        email:
+          type: string
+          format: email
+          description: E-mail do usuário
+          example: "joao.silva@email.com"
+        senha:
+          type: string
+          description: Senha do usuário
+          example: "senhaSegura123"
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Token JWT para autenticação
+        usuario:
+          $ref: '#/components/schemas/Usuario'
+
+    # Schemas de Paciente
+    Paciente:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID único do paciente
+        usuario_id:
+          type: integer
+          description: ID do usuário associado
+        convenio:
+          type: string
+          description: Convênio do paciente
+        usuario:
+          $ref: '#/components/schemas/Usuario'
+
+    PacienteInput:
+      type: object
+      required:
+        - usuario_id
+      properties:
+        usuario_id:
+          type: integer
+          description: ID do usuário associado
+          example: 1
+        convenio:
+          type: string
+          description: Convênio do paciente
+          example: "Unimed"
+
+    # Schemas de Médico
+    Medico:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID único do médico
+        usuario_id:
+          type: integer
+          description: ID do usuário associado
+        crm:
+          type: string
+          description: Número do CRM
+        usuario:
+          $ref: '#/components/schemas/Usuario'
+        especialidade:
+          type: array
+          items:
+            $ref: '#/components/schemas/EspecialidadeMedico'
+        agendas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Agenda'
+
+    EspecialidadeMedico:
+      type: object
+      properties:
+        id:
+          type: integer
+        especialidade_id:
+          type: integer
+        medico_id:
+          type: integer
+        especialidade:
+          $ref: '#/components/schemas/Especialidade'
+
+    Especialidade:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID da especialidade
+        nome:
+          type: string
+          description: Nome da especialidade
+        descricao:
+          type: string
+          description: Descrição da especialidade
+
+    # Schemas de Agenda
+    Agenda:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID único da agenda
+        medico_id:
+          type: integer
+          description: ID do médico
+        data:
+          type: string
+          format: date-time
+          description: Data do horário
+        hora:
+          type: string
+          description: Hora do horário
+          example: "14:30"
+        disponibilidade:
+          type: boolean
+          description: Indica se o horário está disponível
+
+    AgendaInput:
+      type: object
+      required:
+        - medico_id
+        - data
+        - hora
+      properties:
+        medico_id:
+          type: integer
+          description: ID do médico
+          example: 1
+        data:
+          type: string
+          format: date
+          description: Data do horário
+          example: "2025-12-15"
+        hora:
+          type: string
+          description: Hora do horário
+          example: "14:30"
+
+    # Schemas de Consulta
+    Consulta:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID único da consulta
+        paciente_id:
+          type: integer
+          description: ID do paciente
+        medico_id:
+          type: integer
+          description: ID do médico
+        agenda_id:
+          type: integer
+          description: ID da agenda
+        status:
+          type: string
+          description: Status da consulta
+          enum:
+            - agendada
+            - realizada
+            - cancelada
+        motivo_cancelamento:
+          type: string
+          description: Motivo do cancelamento (se aplicável)
+        presenca:
+          type: boolean
+          description: Indica se o paciente compareceu
+        paciente:
+          $ref: '#/components/schemas/Paciente'
+        medico:
+          $ref: '#/components/schemas/Medico'
+        agenda:
+          $ref: '#/components/schemas/Agenda'
+        avaliacao:
+          $ref: '#/components/schemas/Avaliacao'
+
+    ConsultaInput:
+      type: object
+      required:
+        - paciente_id
+        - medico_id
+        - agenda_id
+      properties:
+        paciente_id:
+          type: integer
+          description: ID do paciente
+          example: 1
+        medico_id:
+          type: integer
+          description: ID do médico
+          example: 1
+        agenda_id:
+          type: integer
+          description: ID da agenda (horário disponível)
+          example: 1
+
+    # Schemas de Avaliação
+    Avaliacao:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID único da avaliação
+        consulta_id:
+          type: integer
+          description: ID da consulta avaliada
+        nota:
+          type: integer
+          description: Nota da avaliação (1-5)
+          minimum: 1
+          maximum: 5
+        comentario:
+          type: string
+          description: Comentário da avaliação
+        data_avaliacao:
+          type: string
+          format: date-time
+          description: Data e hora da avaliação
+
+    AvaliacaoInput:
+      type: object
+      required:
+        - consulta_id
+        - nota
+      properties:
+        consulta_id:
+          type: integer
+          description: ID da consulta a ser avaliada
+          example: 1
+        nota:
+          type: integer
+          description: Nota da avaliação (1-5)
+          minimum: 1
+          maximum: 5
+          example: 5
+        comentario:
+          type: string
+          description: Comentário sobre a consulta
+          example: "Excelente atendimento!"
+
+    # Schema de Erro
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Mensagem de erro
+        error:
+          type: string
+          description: Detalhes do erro

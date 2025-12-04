@@ -1,0 +1,62 @@
+paths:
+  /api/agenda/{medicoId}:
+    get:
+      summary: Lista agenda de um médico
+      description: Retorna todos os horários da agenda de um médico específico, ordenados por data.
+      tags:
+        - Agenda
+      parameters:
+        - in: path
+          name: medicoId
+          required: true
+          schema:
+            type: integer
+          description: ID único do médico
+          example: 1
+      responses:
+        200:
+          description: Agenda do médico retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Agenda'
+        500:
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/agenda:
+    post:
+      summary: Cria um novo horário na agenda
+      description: Adiciona um novo horário disponível na agenda de um médico.
+      tags:
+        - Agenda
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgendaInput'
+      responses:
+        201:
+          description: Horário criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agenda'
+        400:
+          description: Campos obrigatórios não informados (medico_id, data e hora são obrigatórios)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

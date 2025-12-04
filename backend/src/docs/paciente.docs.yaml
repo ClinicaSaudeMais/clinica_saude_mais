@@ -1,0 +1,46 @@
+paths:
+  /api/pacientes:
+    post:
+      summary: Cria um novo paciente
+      description: Cadastra um novo paciente no sistema, vinculando-o a um usuário existente.
+      tags:
+        - Pacientes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PacienteInput'
+      responses:
+        200:
+          description: Paciente criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paciente'
+        500:
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      summary: Lista todos os pacientes
+      description: Retorna uma lista com todos os pacientes cadastrados no sistema.
+      tags:
+        - Pacientes
+      responses:
+        200:
+          description: Lista de pacientes retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Paciente'
+        500:
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
