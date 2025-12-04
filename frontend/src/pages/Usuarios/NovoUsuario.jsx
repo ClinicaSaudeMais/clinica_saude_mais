@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../Auth.css'; // Reusing some styles
-import './Usuarios.css'; // Specific styles
+import '../Auth.css';
+import './Usuarios.css';
 
 const NovoUsuario = () => {
   const [errors, setErrors] = useState({});
@@ -15,10 +15,8 @@ const NovoUsuario = () => {
     senha: '',
     confirmar_senha: '',
     perfil_id: '',
-    // Role-specific data
     crm: '',
     convenio: '',
-    // Optional nested data
     contato: {
       tipo_contato: 'Celular',
       valor: '',
@@ -34,9 +32,10 @@ const NovoUsuario = () => {
       cep: '',
     }
   });
+
   const navigate = useNavigate();
 
-  // Fetch profiles for the dropdown
+  // Buscar perfis
   useEffect(() => {
     async function fetchPerfis() {
       try {
@@ -45,120 +44,149 @@ const NovoUsuario = () => {
         setPerfis(data);
       } catch (error) {
         console.error('Erro ao buscar perfis:', error);
-        setErrors(prev => ({ ...prev, form: 'Não foi possível carregar os perfis de acesso.' }));
+        setErrors(prev => ({ ...prev, form: 'Erro ao carregar perfis.' }));
       }
     }
     fetchPerfis();
   }, []);
 
+  // Retorna o nome do perfil selecionado
+  const getSelectedProfileName = () => {
+    const id = parseInt(formData.perfil_id);
+    const p = perfis.find(perfil => perfil.id === id);
+    return p ? p.nome.toLowerCase() : '';
+  };
+
+  // Validação
   const validateField = (name, value) => {
     let error = '';
+
     switch (name) {
       case 'email':
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!value) error = 'O e-mail é obrigatório.';
-        else if (!emailRegex.test(value)) error = 'Por favor, insira um e-mail válido.';
+        else if (!emailRegex.test(value)) error = 'E-mail inválido.';
         break;
+
       case 'senha':
         if (!value) error = 'A senha é obrigatória.';
-        else if (value.length < 8 || value.length > 20) {
-          error = 'A senha deve ter entre 8 e 20 caracteres.';
-        }
+        else if (value.length < 8) error = 'Mínimo 8 caracteres.';
         break;
+
       case 'confirmar_senha':
-        if (!value) error = 'A confirmação da senha é obrigatória.';
-        else if (value !== formData.senha) {
-          error = 'As senhas não coincidem.';
-        }
+        if (value !== formData.senha) error = 'Senhas não coincidem.';
         break;
+
       case 'cpf':
         if (!value) error = 'O CPF é obrigatório.';
         break;
+
       case 'nome':
         if (!value) error = 'O nome é obrigatório.';
         break;
+
       case 'data_nascimento':
         if (!value) error = 'A data de nascimento é obrigatória.';
         break;
+
       case 'perfil_id':
-        if (!value) error = 'É obrigatório selecionar um perfil de acesso.';
+        if (!value) error = 'Selecione um perfil.';
         break;
+
       case 'crm':
-        if (getSelectedProfileName() === 'Medico' && !value) {
-            error = 'O CRM é obrigatório para o perfil Médico.';
-        }
+        if (getSelectedProfileName() === 'medico' && !value)
+          error = 'CRM é obrigatório para médicos.';
         break;
+
       default:
         break;
     }
+
     return error;
   };
+
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
     const error = validateField(name, value);
-    setErrors({ ...errors, [name]: error });
+    setErrors(prev => ({ ...prev, [name]: error }));
   };
 
-  // Generic and nested change handlers
+
+  // Mudanças gerais
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    // se trocar o perfil, limpar crm/convenio e erros
+    if (name === 'perfil_id') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        crm: '',
+        convenio: ''
+      }));
+      setErrors(prev => ({ ...prev, crm: '', convenio: '' }));
+      return;
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
-    if (name === 'senha') {
-        const confirmError = validateField('confirmar_senha', formData.confirmar_senha);
-        setErrors(prev => ({...prev, confirmar_senha: confirmError}));
-    }
   };
+
 
   const handleNestedChange = (e, parent) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [parent]: {
-        ...prev[parent],
-        [name]: value,
-      },
+      [parent]: { ...prev[parent], [name]: value }
     }));
   };
-  
-  // Formatting handlers
+
+  // CPF formatado
   const handleCpfChange = (e) => {
     let value = e.target.value.replace(/\D/g, '');
     value = value.replace(/(\d{3})(\d)/, '$1.$2');
     value = value.replace(/(\d{3})(\d)/, '$1.$2');
     value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    setFormData({ ...formData, cpf: value });
-    if (errors.cpf) setErrors({ ...errors, cpf: '' });
+
+    setFormData(prev => ({ ...prev, cpf: value }));
   };
 
   const handlePhoneChange = (e) => {
     let value = e.target.value.replace(/\D/g, '');
     value = value.replace(/^(\d{2})(\d)/, '($1) $2');
     value = value.replace(/(\d{5})(\d)/, '$1-$2');
-    setFormData({ ...formData, contato: { ...formData.contato, valor: value }});
+
+    setFormData(prev => ({
+      ...prev,
+      contato: { ...prev.contato, valor: value }
+    }));
   };
 
   const handleCepChange = (e) => {
     let value = e.target.value.replace(/\D/g, '');
     value = value.replace(/^(\d{5})(\d)/, '$1-$2');
-    setFormData({ ...formData, endereco: { ...formData.endereco, cep: value }});
+
+    setFormData(prev => ({
+      ...prev,
+      endereco: { ...prev.endereco, cep: value }
+    }));
   };
 
-  const getSelectedProfileName = () => {
-    if (!formData.perfil_id) return '';
-    const selectedProfile = perfis.find(p => p.id === parseInt(formData.perfil_id));
-    return selectedProfile ? selectedProfile.nome : '';
-  };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const fieldsToValidate = ['cpf', 'nome', 'data_nascimento', 'email', 'senha', 'confirmar_senha', 'perfil_id', 'crm'];
+    const fields = [
+      'cpf', 'nome', 'data_nascimento', 'email',
+      'senha', 'confirmar_senha', 'perfil_id', 'crm'
+    ];
+
     const newErrors = {};
-    fieldsToValidate.forEach(field => {
+    fields.forEach(field => {
       const error = validateField(field, formData[field]);
       if (error) newErrors[field] = error;
     });
@@ -168,12 +196,13 @@ const NovoUsuario = () => {
       return;
     }
 
-    const selectedProfileName = getSelectedProfileName();
+    const profileName = getSelectedProfileName();
     let role_data = {};
-    if (selectedProfileName === 'Medico') {
-        role_data = { crm: formData.crm };
-    } else if (selectedProfileName === 'Paciente') {
-        role_data = { convenio: formData.convenio };
+
+    if (profileName === 'medico') {
+      role_data = { crm: formData.crm };
+    } else if (profileName === 'paciente') {
+      role_data = { convenio: formData.convenio };
     }
 
     const dataToSend = {
@@ -186,137 +215,166 @@ const NovoUsuario = () => {
       perfil_id: parseInt(formData.perfil_id),
       role_data,
       contatos: formData.contato.valor ? [formData.contato] : [],
-      enderecos: formData.endereco.cep ? [{...formData.endereco, numero: String(formData.endereco.numero)}] : [],
+      enderecos: formData.endereco.cep
+        ? [{ ...formData.endereco, numero: String(formData.endereco.numero) }]
+        : [],
     };
-    
-    try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/usuarios`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(dataToSend),
-        });
 
-        if (response.ok) {
-            alert('Usuário criado com sucesso!');
-            navigate('/usuarios/ver-todos');
-        } else {
-            const errorData = await response.json();
-            setErrors({ form: errorData.message || 'Erro ao criar usuário.' });
-        }
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/usuarios`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(dataToSend)
+      });
+
+      if (response.ok) {
+        alert('Usuário criado!');
+        navigate('/home');
+      } else {
+        const err = await response.json();
+        setErrors({ form: err.message || 'Erro no servidor.' });
+      }
     } catch (error) {
-        console.error('Erro ao criar usuário:', error);
-        setErrors({ form: 'Erro ao conectar com o servidor.' });
+      setErrors({ form: 'Erro de conexão.' });
     }
   };
+
+
+  const selectedProfile = getSelectedProfileName();
+
 
   return (
     <div className="users-container">
       <h1>Novo Usuário</h1>
-      <form className="profile-card" onSubmit={handleSubmit} style={{maxWidth: '800px'}}>
-        {errors.form && <p className="error-message" style={{ textAlign: 'center', marginBottom: '20px' }}>{errors.form}</p>}
-        
+
+      <form className="profile-card" onSubmit={handleSubmit} style={{ maxWidth: '800px' }}>
+        {errors.form && (
+          <p className="error-message" style={{ textAlign: 'center' }}>{errors.form}</p>
+        )}
+
         <div className="form-grid">
-            {/* Personal and Auth Fields */}
+
+          {/* Campos principais */}
+          <div className="form-group">
+            <label>Nome</label>
+            <input name="nome" value={formData.nome} onChange={handleChange} onBlur={handleBlur} />
+            {errors.nome && <p className="error-message">{errors.nome}</p>}
+          </div>
+
+          <div className="form-group">
+            <label>Sobrenome</label>
+            <input name="sobrenome" value={formData.sobrenome} onChange={handleChange} />
+          </div>
+
+          <div className="form-group">
+            <label>CPF</label>
+            <input name="cpf" maxLength="14" value={formData.cpf} onChange={handleCpfChange} onBlur={handleBlur} />
+            {errors.cpf && <p className="error-message">{errors.cpf}</p>}
+          </div>
+
+          <div className="form-group">
+            <label>Data de Nascimento</label>
+            <input type="date" name="data_nascimento" value={formData.data_nascimento} onChange={handleChange} />
+            {errors.data_nascimento && <p className="error-message">{errors.data_nascimento}</p>}
+          </div>
+
+          <div className="form-group">
+            <label>E-mail</label>
+            <input name="email" value={formData.email} onChange={handleChange} onBlur={handleBlur} />
+            {errors.email && <p className="error-message">{errors.email}</p>}
+          </div>
+
+          <div className="form-group">
+            <label>Senha</label>
+            <input type="password" name="senha" value={formData.senha} onChange={handleChange} onBlur={handleBlur} />
+            {errors.senha && <p className="error-message">{errors.senha}</p>}
+          </div>
+
+          <div className="form-group">
+            <label>Confirmar Senha</label>
+            <input type="password" name="confirmar_senha" value={formData.confirmar_senha} onChange={handleChange} onBlur={handleBlur} />
+            {errors.confirmar_senha && <p className="error-message">{errors.confirmar_senha}</p>}
+          </div>
+
+          <div className="form-group">
+            <label>Perfil</label>
+            <select name="perfil_id" value={formData.perfil_id} onChange={handleChange}>
+              <option value="">Selecione</option>
+              {perfis.map(p => (
+                <option key={p.id} value={p.id}>{p.nome}</option>
+              ))}
+            </select>
+            {errors.perfil_id && <p className="error-message">{errors.perfil_id}</p>}
+          </div>
+
+          {/* Condicionais */}
+          {selectedProfile === 'medico' && (
             <div className="form-group">
-                <label htmlFor="nome">Nome</label>
-                <input type="text" id="nome" name="nome" placeholder="Primeiro nome" value={formData.nome} onChange={handleChange} onBlur={handleBlur} required className={errors.nome ? 'error' : ''} />
-                {errors.nome && <p className="error-message">{errors.nome}</p>}
+              <label>CRM</label>
+              <input name="crm" value={formData.crm} onChange={handleChange} onBlur={handleBlur} />
+              {errors.crm && <p className="error-message">{errors.crm}</p>}
             </div>
+          )}
+
+          {selectedProfile === 'paciente' && (
             <div className="form-group">
-                <label htmlFor="sobrenome">Sobrenome</label>
-                <input type="text" id="sobrenome" name="sobrenome" placeholder="Sobrenome" value={formData.sobrenome} onChange={handleChange} />
+              <label>Convênio</label>
+              <input name="convenio" value={formData.convenio} onChange={handleChange} />
             </div>
-            <div className="form-group">
-                <label htmlFor="cpf">CPF</label>
-                <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" value={formData.cpf} onChange={handleCpfChange} onBlur={handleBlur} maxLength="14" required className={errors.cpf ? 'error' : ''} />
-                {errors.cpf && <p className="error-message">{errors.cpf}</p>}
-            </div>
-            <div className="form-group">
-                <label htmlFor="data_nascimento">Data de nascimento</label>
-                <input type="date" id="data_nascimento" name="data_nascimento" value={formData.data_nascimento} onChange={handleChange} onBlur={handleBlur} required className={errors.data_nascimento ? 'error' : ''} />
-                {errors.data_nascimento && <p className="error-message">{errors.data_nascimento}</p>}
-            </div>
-            <div className="form-group">
-                <label htmlFor="email">E-mail</label>
-                <input type="email" id="email" name="email" placeholder="email@gmail.com" value={formData.email} onChange={handleChange} onBlur={handleBlur} required className={errors.email ? 'error' : ''} />
-                {errors.email && <p className="error-message">{errors.email}</p>}
-            </div>
-            <div className="form-group">
-                <label htmlFor="senha">Senha</label>
-                <input type="password" id="senha" name="senha" placeholder="********" value={formData.senha} onChange={handleChange} onBlur={handleBlur} minLength="8" maxLength="20" required className={errors.senha ? 'error' : ''} />
-                {errors.senha && <p className="error-message">{errors.senha}</p>}
-            </div>
-            <div className="form-group">
-                <label htmlFor="confirmar_senha">Confirmar Senha</label>
-                <input type="password" id="confirmar_senha" name="confirmar_senha" placeholder="********" value={formData.confirmar_senha} onChange={handleChange} onBlur={handleBlur} minLength="8" maxLength="20" required className={errors.confirmar_senha ? 'error' : ''} />
-                {errors.confirmar_senha && <p className="error-message">{errors.confirmar_senha}</p>}
-            </div>
-            <div className="form-group">
-                <label htmlFor="perfil_id">Perfil de Acesso</label>
-                <select id="perfil_id" name="perfil_id" value={formData.perfil_id} onChange={handleChange} onBlur={handleBlur} required className={errors.perfil_id ? 'error' : ''}>
-                    <option value="">Selecione um perfil</option>
-                    {perfis.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
-                </select>
-                {errors.perfil_id && <p className="error-message">{errors.perfil_id}</p>}
-            </div>
-            
-            {/* Conditional fields based on profile */}
-            {getSelectedProfileName() === 'Medico' && (
-                <div className="form-group">
-                    <label htmlFor="crm">CRM</label>
-                    <input type="text" id="crm" name="crm" placeholder="CRM do Médico" value={formData.crm} onChange={handleChange} onBlur={handleBlur} required={getSelectedProfileName() === 'Medico'} className={errors.crm ? 'error' : ''} />
-                    {errors.crm && <p className="error-message">{errors.crm}</p>}
-                </div>
-            )}
-            {getSelectedProfileName() === 'Paciente' && (
-                <div className="form-group">
-                    <label htmlFor="convenio">Convênio (Opcional)</label>
-                    <input type="text" id="convenio" name="convenio" placeholder="Nome do Convênio" value={formData.convenio} onChange={handleChange} />
-                </div>
-            )}
+          )}
         </div>
 
-        <h3 style={{marginTop: '20px', gridColumn: '1 / -1'}}>Contato e Endereço (Opcional)</h3>
+        <h3 style={{ marginTop: '20px' }}>Contato e Endereço (Opcional)</h3>
+
         <div className="form-grid">
-            <div className="form-group">
-                <label htmlFor="contato_valor">Celular</label>
-                <input type="text" id="contato_valor" name="valor" placeholder="(00) 00000-0000" value={formData.contato.valor} onChange={handlePhoneChange} maxLength="15" />
-            </div>
-            <div className="form-group">
-                <label htmlFor="cep">CEP</label>
-                <input type="text" id="cep" name="cep" placeholder="00000-000" value={formData.endereco.cep} onChange={handleCepChange} maxLength="9" />
-            </div>
-            <div className="form-group">
-                <label htmlFor="logradouro">Logradouro</label>
-                <input type="text" id="logradouro" name="logradouro" placeholder="Rua, Avenida, etc." value={formData.endereco.logradouro} onChange={(e) => handleNestedChange(e, 'endereco')} />
-            </div>
-            <div className="form-group">
-                <label htmlFor="numero">Número</label>
-                <input type="text" id="numero" name="numero" placeholder="Nº" value={formData.endereco.numero} onChange={(e) => handleNestedChange(e, 'endereco')} />
-            </div>
-            <div className="form-group">
-                <label htmlFor="complemento">Complemento</label>
-                <input type="text" id="complemento" name="complemento" placeholder="Apto, Bloco, etc." value={formData.endereco.complemento} onChange={(e) => handleNestedChange(e, 'endereco')} />
-            </div>
-            <div className="form-group">
-                <label htmlFor="bairro">Bairro</label>
-                <input type="text" id="bairro" name="bairro" placeholder="Bairro" value={formData.endereco.bairro} onChange={(e) => handleNestedChange(e, 'endereco')} />
-            </div>
-            <div className="form-group">
-                <label htmlFor="cidade">Cidade</label>
-                <input type="text" id="cidade" name="cidade" placeholder="Cidade" value={formData.endereco.cidade} onChange={(e) => handleNestedChange(e, 'endereco')} />
-            </div>
-            <div className="form-group">
-                <label htmlFor="estado">Estado</label>
-                <input type="text" id="estado" name="estado" placeholder="UF" value={formData.endereco.estado} onChange={(e) => handleNestedChange(e, 'endereco')} />
-            </div>
+          <div className="form-group">
+            <label>Celular</label>
+            <input maxLength="15" value={formData.contato.valor} onChange={handlePhoneChange} />
+          </div>
+
+          <div className="form-group">
+            <label>CEP</label>
+            <input maxLength="9" value={formData.endereco.cep} onChange={handleCepChange} />
+          </div>
+
+          <div className="form-group">
+            <label>Logradouro</label>
+            <input name="logradouro" value={formData.endereco.logradouro} onChange={(e) => handleNestedChange(e, 'endereco')} />
+          </div>
+
+          <div className="form-group">
+            <label>Número</label>
+            <input name="numero" value={formData.endereco.numero} onChange={(e) => handleNestedChange(e, 'endereco')} />
+          </div>
+
+          <div className="form-group">
+            <label>Complemento</label>
+            <input name="complemento" value={formData.endereco.complemento} onChange={(e) => handleNestedChange(e, 'endereco')} />
+          </div>
+
+          <div className="form-group">
+            <label>Bairro</label>
+            <input name="bairro" value={formData.endereco.bairro} onChange={(e) => handleNestedChange(e, 'endereco')} />
+          </div>
+
+          <div className="form-group">
+            <label>Cidade</label>
+            <input name="cidade" value={formData.endereco.cidade} onChange={(e) => handleNestedChange(e, 'endereco')} />
+          </div>
+
+          <div className="form-group">
+            <label>Estado</label>
+            <input name="estado" value={formData.endereco.estado} onChange={(e) => handleNestedChange(e, 'endereco')} />
+          </div>
         </div>
-        
-        <button type="submit" className="submit-btn" style={{width: 'auto', padding: '10px 30px', marginTop: '20px'}}>Criar Usuário</button>
+
+        <button type="submit" className="submit-btn" style={{ marginTop: '20px' }}>
+          Criar Usuário
+        </button>
       </form>
     </div>
   );
