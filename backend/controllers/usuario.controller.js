@@ -97,6 +97,70 @@ export async function listarUsuarios(req, res) {
   }
 }
 
+export async function ativarUsuario(req, res) {
+  try {
+    const { id } = req.params;
+    const usuario = await prisma.usuario.update({
+      where: { id: parseInt(id) },
+      data: { ativo: true },
+      include: {
+        perfis: { include: { perfil: true } }
+      }
+    });
+    const { senha: _, ...userWithoutPassword } = usuario;
+    res.json(userWithoutPassword);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Ocorreu um erro ao ativar o usuário.", details: err.message });
+  }
+}
+
+export async function desativarUsuario(req, res) {
+  try {
+    const { id } = req.params;
+    const usuario = await prisma.usuario.update({
+      where: { id: parseInt(id) },
+      data: { ativo: false },
+      include: {
+        perfis: { include: { perfil: true } }
+      }
+    });
+    const { senha: _, ...userWithoutPassword } = usuario;
+    res.json(userWithoutPassword);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Ocorreu um erro ao desativar o usuário.", details: err.message });
+  }
+}
+
+export async function listarUsuarioPorId(req, res) {
+  try {
+    const { id } = req.params;
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        perfis: {
+          include: {
+            perfil: true
+          }
+        },
+        contato: true,
+        endereco: true,
+      }
+    });
+
+    if (!usuario) {
+      return res.status(404).json({ message: "Usuário não encontrado." });
+    }
+
+    const { senha: _, ...userWithoutPassword } = usuario;
+    res.json(userWithoutPassword);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Ocorreu um erro ao buscar o usuário.", details: err.message });
+  }
+}
+
 export async function loginUsuario(req, res) {
     try {
         const { email, senha } = req.body;
@@ -136,3 +200,33 @@ export async function loginUsuario(req, res) {
         res.status(500).json({ error: "Ocorreu um erro ao fazer login.", details: err.message });
     }
 }
+
+export async function listarTodosMedicos(req, res) {
+    try {
+        const medicos = await prisma.usuario.findMany({
+            where: {
+                perfis: {
+                    some: {
+                        perfil: {
+                            nome: 'Medico'
+                        }
+                    }
+                }
+            },
+            include: {
+                medico: true // Includes the crm
+            }
+        });
+
+        const usersWithoutPasswords = medicos.map(u => {
+            const {senha: _, ...user} = u;
+            return user;
+        });
+
+        res.json(usersWithoutPasswords);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Ocorreu um erro ao buscar os médicos." });
+    }
+}
+

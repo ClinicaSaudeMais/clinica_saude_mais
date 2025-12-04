@@ -8,16 +8,16 @@ import agendaRoutes from "./routes/agenda.routes.js";
 import avaliacaoRoutes from "./routes/avaliacao.routes.js";
 import usuarioRoutes from "./routes/usuario.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import perfilRoutes from "./routes/perfil.routes.js";
 
 const app = express();
 
 app.use(cors({
-  origin: true,
+  origin: 'http://localhost:5173',
   credentials: true,
   methods: ['GET','POST','PUT','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization']
 }));
-app.options('*', cors());
 app.use(express.json());
 
 // prefixos
@@ -28,5 +28,6 @@ app.use("/api/agenda", agendaRoutes);
 app.use("/api/avaliacoes", avaliacaoRoutes);
 app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/perfis", perfilRoutes);
 
 export default app;

@@ -79,19 +79,18 @@ function App() {
             </PrivateRoute>
           } 
         />
-        <Route 
-          path="/usuarios/novo" 
-          element={
-            <PrivateRoute>
-              <MainLayout>
-                <NovoUsuario />
-              </MainLayout>
-            </PrivateRoute>
-          } 
-        />
-        <Route 
-          path="/agendamentos" 
-          element={
+                <Route
+                  path="/usuarios/novo"
+                  element={
+                    <PrivateRoute>
+                      <MainLayout>
+                        <NovoUsuario />
+                      </MainLayout>
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/agendamentos"          element={
             <PrivateRoute>
               <MainLayout>
                 <VerTodosAgendamentos />

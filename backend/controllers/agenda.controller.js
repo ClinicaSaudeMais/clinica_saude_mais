@@ -14,6 +14,58 @@ export async function listarAgendaPorMedico(req, res) {
   }
 }
 
+export async function listarTodasAgendas(req, res) {
+  try {
+    const agendas = await prisma.agenda.findMany({
+      include: {
+        medico: {
+          include: {
+            usuario: true
+          }
+        }
+      },
+      orderBy: { data: "desc" }
+    });
+    res.json(agendas);
+  } catch (err)
+ {
+    console.error(err);
+    res.status(500).json({ error: "Ocorreu um erro ao buscar todos os cronogramas." });
+  }
+}
+
+export async function listarMinhasAgendas(req, res) {
+  try {
+    const userId = req.user.id;
+
+    // First, find the medico ID associated with the user ID
+    const medico = await prisma.medico.findUnique({
+      where: { usuario_id: userId },
+    });
+
+    if (!medico) {
+      return res.status(404).json({ message: "Perfil de médico não encontrado para este usuário." });
+    }
+
+    const agendas = await prisma.agenda.findMany({
+      where: { medico_id: medico.id },
+      include: {
+        medico: {
+          include: {
+            usuario: true
+          }
+        }
+      },
+      orderBy: { data: "desc" }
+    });
+
+    res.json(agendas);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Ocorreu um erro ao buscar seus cronogramas." });
+  }
+}
+
 export async function criarAgenda(req, res) {
   try {
     const { medico_id, data, hora } = req.body;
@@ -31,5 +83,36 @@ export async function criarAgenda(req, res) {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
+  }
+}
+
+export async function criarMinhaAgenda(req, res) {
+  try {
+    const { data, hora } = req.body;
+    if (!data || !hora) {
+      return res.status(400).json({ message: "Data and hora are required." });
+    }
+
+    const userId = req.user.id;
+    const medico = await prisma.medico.findUnique({
+      where: { usuario_id: userId },
+    });
+
+    if (!medico) {
+      return res.status(404).json({ message: "Perfil de médico não encontrado para este usuário." });
+    }
+
+    const agenda = await prisma.agenda.create({
+      data: {
+        medico_id: medico.id,
+        data: new Date(data),
+        hora,
+      },
+    });
+
+    res.status(201).json(agenda);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Ocorreu um erro ao criar o cronograma." });
   }
 }
