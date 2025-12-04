@@ -17,25 +17,31 @@ const MeusCronogramas = () => {
       }
 
       try {
-        const response = await fetch("http://localhost:3000/api/agendas/meus-cronogramas/medico", {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/agenda/meus-cronogramas/medico`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
-        if (response.status === 404) {
-          setError("Você não possui um perfil de médico para ter cronogramas.");
-          return;
-        }
-
         if (!response.ok) {
-          throw new Error('Falha ao buscar seus cronogramas.');
+          let errorData;
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            errorData = await response.json();
+            console.error("Backend error details (JSON):", errorData);
+            throw new Error(errorData.message || 'Falha ao buscar seus cronogramas.');
+          } else {
+            errorData = await response.text();
+            console.error("Backend error details (text):", errorData);
+            throw new Error(errorData || 'Falha ao buscar seus cronogramas: Resposta inesperada do servidor.');
+          }
         }
         
         const data = await response.json();
         setAgendas(data);
       } catch (error) {
         setError(error.message);
+        console.log(error.message);
         console.error("Erro ao buscar cronogramas:", error);
       } finally {
         setLoading(false);

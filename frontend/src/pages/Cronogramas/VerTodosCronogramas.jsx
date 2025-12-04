@@ -9,9 +9,19 @@ const VerTodosCronogramas = () => {
   useEffect(() => {
     async function fetchAgendas() {
       try {
-        const response = await fetch("http://localhost:3000/api/agendas");
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/agenda`);
         if (!response.ok) {
-          throw new Error('Falha ao buscar cronogramas.');
+          let errorData;
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            errorData = await response.json();
+            console.error("Backend error details (JSON):", errorData);
+            throw new Error(errorData.message || 'Falha ao buscar cronogramas.');
+          } else {
+            errorData = await response.text();
+            console.error("Backend error details (text):", errorData);
+            throw new Error(errorData || 'Falha ao buscar cronogramas: Resposta inesperada do servidor.');
+          }
         }
         const data = await response.json();
         setAgendas(data);
