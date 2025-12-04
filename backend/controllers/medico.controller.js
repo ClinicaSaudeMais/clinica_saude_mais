@@ -5,7 +5,7 @@ export async function listarMedicos(req, res) {
     const medicos = await prisma.medico.findMany({
       include: {
         usuario: true,
-        especialidade: { include: { especialidade: true } }
+        // especialidade: { include: { especialidade: true } }
       }
     });
     res.json(medicos);

@@ -16,6 +16,8 @@ const MeusAgendamentos = () => {
         return;
       }
 
+      console.log('Token exists:', !!token);
+
       try {
         const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/consultas/meus-agendamentos`, {
           headers: {
@@ -24,7 +26,17 @@ const MeusAgendamentos = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Falha ao buscar seus agendamentos.');
+          let errorData;
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            errorData = await response.json();
+            console.error("Backend error details (JSON):", errorData);
+            throw new Error(errorData.message || 'Falha ao buscar seus agendamentos.');
+          } else {
+            errorData = await response.text();
+            console.error("Backend error details (text):", errorData);
+            throw new Error(errorData || 'Falha ao buscar seus agendamentos: Resposta inesperada do servidor.');
+          }
         }
         
         const data = await response.json();

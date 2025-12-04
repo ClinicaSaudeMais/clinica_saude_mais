@@ -21,7 +21,7 @@ const NovoCronograma = () => {
     if (token) {
       try {
         const decodedToken = jwtDecode(token);
-        const userProfiles = decodedToken.perfis.map(p => p.nome.toLowerCase());
+        const userProfiles = decodedToken.perfis.map(profileName => profileName.toLowerCase());
         if (userProfiles.includes('medico')) {
           setIsUserDoctor(true);
           // If the user is a doctor, their medico_id will be handled by the backend
@@ -165,7 +165,7 @@ const NovoCronograma = () => {
             >
               <option value="">Selecione um Médico</option>
               {doctors.map(doctor => (
-                <option key={doctor.id} value={doctor.id}>
+                <option key={doctor.id_med} value={doctor.id_med}>
                   {doctor.nome} {doctor.sobrenome}
                 </option>
               ))}

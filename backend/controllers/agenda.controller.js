@@ -4,9 +4,15 @@ export async function listarAgendaPorMedico(req, res) {
   try {
     const medicoId = Number(req.params.medicoId);
     const agenda = await prisma.agenda.findMany({
-      where: { medico_id: medicoId },
+      where: { medico_id: medicoId, disponibilidade: true },
+      select: {
+        id: true,
+        data: true,
+        hora: true,
+      },
       orderBy: { data: "asc" }
     });
+    console.log(`listarAgendaPorMedico: Agendas encontradas para o médico ${medicoId}:`, agenda); // Adicionado log de depuração
     res.json(agenda);
   } catch (err) {
     console.error(err);
@@ -96,9 +102,12 @@ export async function criarAgendaParaMedico(req, res) {
 
     if (!medico_id) {
       const userId = req.user.id;
+      console.log('criarAgendaParaMedico: No medico_id in body, trying to infer from userId:', userId);
+
       const medicoDoUsuario = await prisma.medico.findUnique({
         where: { usuario_id: userId },
       });
+      console.log('criarAgendaParaMedico: Result of prisma.medico.findUnique for userId', userId, ':', medicoDoUsuario);
 
       if (!medicoDoUsuario) {
         return res.status(400).json({ message: "ID do médico não fornecido e o usuário logado não é um médico." });
@@ -110,6 +119,7 @@ export async function criarAgendaParaMedico(req, res) {
         return res.status(400).json({ message: "ID do médico inválido." });
       }
     }
+    console.log('criarAgendaParaMedico: Final medico_id used for agenda creation:', medico_id);
 
     const agenda = await prisma.agenda.create({
       data: {

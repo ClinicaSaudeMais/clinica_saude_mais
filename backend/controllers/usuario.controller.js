@@ -203,27 +203,32 @@ export async function loginUsuario(req, res) {
 
 export async function listarTodosMedicos(req, res) {
     try {
-        const medicos = await prisma.usuario.findMany({
-            where: {
-                perfis: {
-                    some: {
-                        perfil: {
-                            nome: 'Medico'
+        const medicos = await prisma.medico.findMany({ // Query the medico table directly
+            include: {
+                usuario: { // Include the associated user data
+                    include: {
+                        perfis: {
+                            include: {
+                                perfil: true // Include profile details if needed for display
+                            }
                         }
                     }
-                }
-            },
-            include: {
-                medico: true // Includes the crm
+                },
             }
         });
 
-        const usersWithoutPasswords = medicos.map(u => {
-            const {senha: _, ...user} = u;
-            return user;
+        // Map the result to flatten the structure and remove password
+        const doctorsWithUserData = medicos.map(medicoEntry => {
+            const { senha: _, ...userWithoutPassword } = medicoEntry.usuario; // Destructure and exclude password
+            return {
+                id: medicoEntry.id, // This is the medico.id (from medico table)
+                crm: medicoEntry.crm,
+                id_med: medicoEntry.id,
+                ...userWithoutPassword, // Spread the user data
+            };
         });
 
-        res.json(usersWithoutPasswords);
+        res.json(doctorsWithUserData);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Ocorreu um erro ao buscar os médicos." });
